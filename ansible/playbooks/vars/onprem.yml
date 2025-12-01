@@ -1,0 +1,137 @@
+---
+# ByteFreezer Receiver - Centralized Variables Configuration
+
+# GitHub repository
+github_repo: "n0needt0/bytefreezer-receiver"
+version: "{{ bytefreezer_receiver_version | default('latest') }}"
+
+# Service configuration
+service:
+  name: "bytefreezer-receiver"
+  user: "root"
+  group: "root"
+
+# File paths
+paths:
+  binary_dir: "/usr/local/bin"
+  binary_path: "/usr/local/bin/bytefreezer-receiver" 
+  config_dir: "/etc/bytefreezer-receiver"
+  config_path: "/etc/bytefreezer-receiver/config.yaml"
+  log_dir: "/var/log/bytefreezer-receiver"
+  spool_dir: "/var/spool/bytefreezer-receiver"
+  service_path: "/etc/systemd/system/bytefreezer-receiver.service"
+  logrotate_path: "/etc/logrotate.d/bytefreezer-receiver"
+
+# Log rotation settings
+logrotate:
+  rotate_count: 7
+
+# Application configuration
+config:
+  app:
+    name: "bytefreezer-receiver"
+    version: "1.0.0"
+  
+  logging:
+    level: "info"
+    encoding: "console"
+  
+  server:
+    api_port: 8081
+
+  bytefreezer:
+    upload_worker_count: 10  # More upload workers for faster S3 uploads
+    spool_path: "/var/spool/bytefreezer-receiver"
+
+  # Control Service configuration (replaces dev mode and legacy controller)
+  control_service:
+    enabled: true
+    base_url: "http://192.168.86.103:8082"
+    api_key: "bytefreezer-service-api-key-8f4a2d1b-3c5e-4f6a-9b8c-7d2e1f3a4b5c"
+    timeout_seconds: 30
+
+  # Authentication configuration
+  authentication:
+    enabled: false
+
+  otel:
+    enabled: true
+    service_name: "bytefreezer-receiver"
+    scrapeIntervalseconds: 15
+    # Prometheus mode - expose metrics on HTTP endpoint for scraping
+    prometheus_mode: true
+    metrics_port: 9091
+    # Bind to all interfaces for external scraping
+    metrics_host: "0.0.0.0"
+
+  housekeeping:
+    enabled: true
+    intervalseconds: 60
+
+  # S3 destination - On-prem deployment configuration
+  s3destination:
+    bucket_name: "intake-onprem"
+    region: "us-east-1"
+    endpoint: "192.168.86.125:9000"
+    ssl: false
+    access_key: "AKIAQNXBAHUKIMJP26P6"
+    secret_key: "SECRET_KEY_AKIAQNXBAHUKIMJP26P6"
+    use_iam_role: false
+
+  # Raw data ingestion protocols
+  protocols:
+    webhook:
+      enabled: true
+      port: 8080
+      max_payload_size: 10485760  # 10MB
+    upload:
+      enabled: false  # Disabled by default - enable for file uploads
+      max_file_size: 104857600  # 100MB
+
+  soc:
+    enabled: false
+
+  # Dead Letter Queue (DLQ) configuration for failed uploads
+  dlq:
+    enabled: true
+    directory: "/var/spool/bytefreezer-receiver"  # Uses same spool directory
+    retry_attempts: 3
+    retry_interval_seconds: 60
+    cleanup_interval_seconds: 300
+    max_age_days: 7
+
+  # GeoIP processing moved to bytefreezer-piper service
+
+  dev: false  # Disabled - using Control Service (see control_service above)
+
+  # Health reporting configuration for service registration and monitoring
+  # Note: Uses control_service.base_url for the control service endpoint
+  health_reporting:
+    enabled: true
+    report_interval: 30
+    timeout_seconds: 10
+    register_on_startup: true
+
+  # Error tracking configuration for centralized error monitoring
+  # Note: Uses control_service.base_url for the control service endpoint
+  error_tracking:
+    enabled: true  # Enable by default to collect errors from receiver service
+
+# Download configuration
+download:
+  url: "https://github.com/{{ github_repo }}/releases/{{ 'latest/download' if version == 'latest' else 'download/' + version }}/bytefreezer-receiver-linux-amd64.tar.gz"
+
+# Docker image configuration for docker_install.yml
+docker:
+  image_name: "ghcr.io/n0needt0/bytefreezer-receiver"
+  tag: "{{ bytefreezer_receiver_version | default('latest') }}"
+  force_pull: false  # Set to true to always pull latest image
+
+# Remove configuration
+remove:
+  spool_dir: "{{ bytefreezer_receiver_remove_spool_dir | default(false) }}"
+
+# AWX Survey Variables (Override via job template surveys)
+force_reinstall: "{{ force_reinstall | default(false) }}"
+skip_validation: "{{ skip_validation | default(false) }}"
+enable_debug_logging: "{{ enable_debug_logging | default(false) }}"

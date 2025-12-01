@@ -1,0 +1,107 @@
+# ByteFreezer Receiver Configuration - Direct Queue Processing
+#
+# The receiver implements direct processing without merging:
+#
+# Data Flow: Webhook → Queue → Upload Worker → S3 (or DLQ on failure)
+#
+# Directory Structure:
+# /var/spool/bytefreezer-receiver/{tenant}/{dataset}/
+# ├── queue/    # Webhook data stored here (.ndjson.gz files from proxy)
+# └── dlq/      # Failed uploads after retry attempts (.ndjson.gz + .meta files)
+#
+# This ensures fast data ingestion with no merging overhead.
+
+app:
+  name: "bytefreezer-receiver"
+  version: "1.0.0"
+
+logging:
+  level: "info"
+  encoding: "console"
+
+server:
+  api_port: 8081
+
+# Raw data ingestion - format-agnostic processing
+protocols:
+  # Webhook ingestion - HTTP POST endpoints
+  webhook:
+    enabled: true
+    port: 8080
+    max_payload_size: 10485760  # 10MB max compressed payload size (uncompressed size not limited)
+  # File upload ingestion - batch file uploads (raw data)
+  upload:
+    enabled: false  # Disabled by default - enable for file uploads
+    max_file_size: 104857600  # 100MB
+
+bytefreezer:
+  upload_worker_count: 10  # More upload workers for faster S3 uploads
+  # Three-stage spooling pipeline: queue → retry → S3/DLQ
+  spool_path: "/home/andrew/workspace/bytefreezer/bytefreezer-receiver/spool"
+
+# Control Service configuration (replaces dev mode and legacy controller)
+control_service:
+  enabled: true
+  base_url: "http://192.168.86.103:8082"
+  api_key: "bytefreezer-service-api-key-8f4a2d1b-3c5e-4f6a-9b8c-7d2e1f3a4b5c"  # System-wide service API key
+  timeout_seconds: 30
+
+# Authentication configuration
+authentication:
+  enabled: false  # Disable bearer token validation for open mode
+
+# OpenTelemetry configuration
+otel:
+  enabled: true
+  service_name: "bytefreezer-receiver"
+  scrapeIntervalseconds: 15
+  # Prometheus mode - expose metrics on HTTP endpoint for scraping
+  prometheus_mode: true
+  metrics_port: 9091
+  # Bind to all interfaces for external scraping
+  metrics_host: "0.0.0.0"
+
+housekeeping:
+  enabled: true
+  intervalseconds: 600  # 10 minutes
+
+# S3 destination for storing raw webhook data (raw/ prefix)
+# Data layout: {tenantid}/{datasetid}/filename.ndjson.gz (simplified for transient files)
+s3destination:
+  bucket_name: "bytefreezer-data"  # Shared bucket for all three services
+  region: "us-east-1"
+  endpoint: "192.168.86.125:9000"  # Your MinIO endpoint
+  ssl: false
+  access_key: "AKIAQNXBAHUKIMJP26P6"
+  secret_key: "SECRET_KEY_AKIAQNXBAHUKIMJP26P6"
+  use_iam_role: false
+
+
+
+# PostgreSQL lock removed - using spool-based file approach
+
+soc:
+  enabled: false  # Disable for basic setup
+
+# Dead Letter Queue (DLQ) configuration for failed uploads
+dlq:
+  enabled: true
+  directory: "/home/andrew/workspace/bytefreezer/bytefreezer-receiver/spool"  # Uses same spool directory as other components
+  retry_attempts: 3
+  retry_interval_seconds: 60  # 1 minute
+  cleanup_interval_seconds: 300  # 5 minutes
+  max_age_days: 7  # Remove DLQ files older than 7 days
+
+dev: false  # Disabled - using Control Service instead (see control_service config above)
+
+# Health reporting configuration for service registration and monitoring
+# Note: Uses control_service.base_url for the control service endpoint
+health_reporting:
+  enabled: true
+  report_interval: 30
+  timeout_seconds: 10
+  register_on_startup: true
+
+# Error tracking configuration
+error_tracking:
+  enabled: true  # Enable error reporting to control service

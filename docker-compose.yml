@@ -1,0 +1,166 @@
+version: '3.8'
+
+services:
+  bytefreezer-receiver:
+    image: ghcr.io/n0needt0/bytefreezer-receiver:latest
+    container_name: bytefreezer-receiver
+    restart: unless-stopped
+    
+    # Network configuration
+    ports:
+      - "8080:8080/tcp"    # API endpoint
+      - "8081:8081/tcp"    # Webhook endpoint
+      - "9098:9098/tcp"    # Prometheus metrics endpoint
+    
+    # Volume mounts
+    volumes:
+      # Configuration (modify ./config/config.yaml as needed)
+      - ./config.yaml:/etc/bytefreezer-receiver/config.yaml:ro
+      
+      # Persistent data directories
+      - bytefreezer-receiver-spool:/var/spool/bytefreezer-receiver
+      - bytefreezer-receiver-logs:/var/log/bytefreezer-receiver
+    
+    # Environment variables
+    environment:
+      - CONFIG_FILE=/etc/bytefreezer-receiver/config.yaml
+      - TZ=UTC
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+    
+    # Security settings
+    security_opt:
+      - no-new-privileges:true
+    user: "1000:1000"
+    read_only: true
+    
+    # Temporary filesystems for writable areas
+    tmpfs:
+      - /tmp:size=100M,noexec,nosuid,nodev
+    
+    # Labels for container management
+    labels:
+      - "com.bytefreezer.component=receiver"
+      - "com.bytefreezer.environment=production"
+      - "traefik.enable=true"
+      - "traefik.http.routers.bytefreezer-receiver.rule=Host(`receiver.bytefreezer.local`)"
+      - "traefik.http.services.bytefreezer-receiver.loadbalancer.server.port=8080"
+
+  # Optional: MinIO for S3-compatible storage
+  minio:
+    image: minio/minio:latest
+    container_name: bytefreezer-minio
+    restart: unless-stopped
+    profiles:
+      - storage
+    ports:
+      - "9000:9000/tcp"
+      - "9001:9001/tcp"
+    volumes:
+      - minio-data:/data
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    labels:
+      - "com.bytefreezer.component=minio"
+      - "com.bytefreezer.environment=storage"
+
+  # Optional: Monitoring with Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: bytefreezer-prometheus
+    restart: unless-stopped
+    profiles:
+      - monitoring
+    ports:
+      - "9090:9090/tcp"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    labels:
+      - "com.bytefreezer.component=prometheus"
+      - "com.bytefreezer.environment=monitoring"
+
+  # Optional: Grafana for metrics visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: bytefreezer-grafana
+    restart: unless-stopped
+    profiles:
+      - monitoring
+    ports:
+      - "3000:3000/tcp"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    labels:
+      - "com.bytefreezer.component=grafana"
+      - "com.bytefreezer.environment=monitoring"
+
+# Named volumes for persistent data
+volumes:
+  bytefreezer-receiver-spool:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./data/spool
+      o: bind
+
+  bytefreezer-receiver-logs:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./data/logs
+      o: bind
+      
+  minio-data:
+    driver: local
+    
+  prometheus-data:
+    driver: local
+    
+  grafana-data:
+    driver: local
+
+# Custom networks for better isolation
+networks:
+  default:
+    name: bytefreezer
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16

@@ -1,0 +1,151 @@
+project_name: bytefreezer-receiver
+
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  - id: bytefreezer-receiver
+    binary: bytefreezer-receiver
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -X main.builtBy=goreleaser
+
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^build:'
+      - '^style:'
+      - '^refactor:'
+      - '^chore:'
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: 'Bug fixes'
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: 'Performance improvements'
+      regexp: '^.*?perf(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: Others
+      order: 999
+
+release:
+  github:
+    owner: bytefreezer
+    name: bytefreezer-receiver
+  draft: false
+  prerelease: auto
+  name_template: "ByteFreezer Receiver {{.Tag}}"
+  header: |
+    ## ByteFreezer Receiver Release {{.Tag}}
+    
+    This release includes improvements to the ByteFreezer data ingestion receiver service.
+    
+    ### Installation
+    
+    Download the appropriate binary for your platform from the assets below.
+    
+    ### Docker Images
+    
+    ```bash
+    docker pull bytefreezer/receiver:{{.Tag}}
+    docker pull ghcr.io/bytefreezer/bytefreezer-receiver:{{.Tag}}
+    ```
+    
+    ### Kubernetes Deployment
+    
+    ```bash
+    helm install bytefreezer-receiver ./helm/bytefreezer-receiver --set image.tag={{.Tag}}
+    ```
+
+brews:
+  - name: bytefreezer-receiver
+    tap:
+      owner: bytefreezer
+      name: homebrew-tap
+    homepage: https://github.com/bytefreezer/bytefreezer-receiver
+    description: ByteFreezer data ingestion receiver service
+    license: MIT
+    test: |
+      system "#{bin}/bytefreezer-receiver --version"
+    install: |
+      bin.install "bytefreezer-receiver"
+
+dockers:
+  - id: bytefreezer-receiver
+    image_templates:
+      - "bytefreezer/receiver:{{ .Tag }}"
+      - "bytefreezer/receiver:latest"
+      - "ghcr.io/bytefreezer/bytefreezer-receiver:{{ .Tag }}"
+      - "ghcr.io/bytefreezer/bytefreezer-receiver:latest"
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+
+nfpms:
+  - id: bytefreezer-receiver
+    package_name: bytefreezer-receiver
+    vendor: ByteFreezer
+    homepage: https://github.com/bytefreezer/bytefreezer-receiver
+    maintainer: ByteFreezer Team <team@bytefreezer.org>
+    description: ByteFreezer data ingestion receiver service
+    license: MIT
+    formats:
+      - deb
+      - rpm
+    dependencies:
+      - ca-certificates
+    contents:
+      - src: ./config.yaml
+        dst: /etc/bytefreezer/receiver/config.yaml
+        type: config
+      - src: ./helm/bytefreezer-receiver/
+        dst: /usr/share/bytefreezer/helm/
+        type: tree
+    scripts:
+      postinstall: |
+        systemctl daemon-reload
+        systemctl enable bytefreezer-receiver.service
