@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bytefreezer/goodies/log"
 	"github.com/bytefreezer/receiver/config"
 	"github.com/bytefreezer/receiver/services"
-	"github.com/bytefreezer/goodies/log"
 	"github.com/swaggest/openapi-go/openapi3"
 	"github.com/swaggest/rest/web"
 	swgui "github.com/swaggest/swgui/v5emb"
@@ -65,7 +65,6 @@ func (api *API) NewRouter() *web.Service {
 	service.Get("/api/v1/tenants", api.GetTenants())
 	service.Get("/api/v1/tenants/count", api.GetTenantCount())
 	service.Get("/api/v1/tenants/{tenantId}", api.GetTenant())
-
 
 	// Configuration endpoints
 	service.Get("/api/v1/config", api.GetConfig())

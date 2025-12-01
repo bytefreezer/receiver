@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
+	"github.com/bytefreezer/goodies/log"
 	"github.com/bytefreezer/receiver/config"
 	"github.com/bytefreezer/receiver/domain"
 	"github.com/bytefreezer/receiver/utils"
-	"github.com/bytefreezer/goodies/log"
 )
 
 type UploadWorkerPool struct {
@@ -477,7 +477,7 @@ func (up *UploadWorkerPool) processQueueFile(dataPath string) error {
 		MaxAttempts:    3,
 		CreatedAt:      time.Now(),
 		ResultChan:     make(chan *UploadResult, 1),
-		LineCount:      lineCount, // Use proxy line count from metadata
+		LineCount:      lineCount,     // Use proxy line count from metadata
 		OriginalSize:   originalBytes, // Use proxy original bytes from metadata
 		ProcessedSize:  int64(len(fileData)),
 		ProcessingTime: 0, // No merge processing time

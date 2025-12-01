@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
+	"github.com/bytefreezer/goodies/log"
 	"github.com/bytefreezer/receiver/config"
 	"github.com/bytefreezer/receiver/utils"
-	"github.com/bytefreezer/goodies/log"
 )
 
 // parseTimestamp attempts to parse various timestamp formats to time.Time
@@ -103,10 +103,10 @@ type QueueFile struct {
 // RetryFile represents a file in retry with metadata
 type RetryFile struct {
 	QueueFile
-	RetryCount      int       `json:"retry_count"`
-	LastRetry       time.Time `json:"last_retry"`
-	FailureReason   string    `json:"failure_reason,omitempty"`
-	FilenameDebug   string    `json:"filename_debug,omitempty"`   // Debug info about filename transformations
+	RetryCount    int       `json:"retry_count"`
+	LastRetry     time.Time `json:"last_retry"`
+	FailureReason string    `json:"failure_reason,omitempty"`
+	FilenameDebug string    `json:"filename_debug,omitempty"` // Debug info about filename transformations
 }
 
 // RetryJob represents a retry task for a worker (proxy pattern)
@@ -360,10 +360,10 @@ func (s *SpoolingService) moveQueueFileToRetry(tenantID, datasetID, filename str
 			CreatedAt:        fileInfo.ModTime(),
 			Status:           "retry",
 		},
-		RetryCount:      0,
-		LastRetry:       time.Time{},
-		FailureReason:   "",
-		FilenameDebug:   filenameDebug,
+		RetryCount:    0,
+		LastRetry:     time.Time{},
+		FailureReason: "",
+		FilenameDebug: filenameDebug,
 	}
 
 	// Move file to retry directory
@@ -696,15 +696,15 @@ func (s *SpoolingService) attemptS3Upload(tenantID, datasetID, filePath string, 
 
 	// Create comprehensive S3 metadata
 	metadata := map[string]string{
-		"tenant":            tenantID,
-		"dataset":           datasetID,
-		"original-filename": retryFile.Filename,
-		"bytes":             fmt.Sprintf("%d", retryFile.CompressedSize),
-		"line-count":        fmt.Sprintf("%d", retryFile.LineCount),
+		"tenant":             tenantID,
+		"dataset":            datasetID,
+		"original-filename":  retryFile.Filename,
+		"bytes":              fmt.Sprintf("%d", retryFile.CompressedSize),
+		"line-count":         fmt.Sprintf("%d", retryFile.LineCount),
 		"receiver-queued-at": retryFile.CreatedAt.Format(time.RFC3339),
 		"s3-uploaded-at":     time.Now().UTC().Format(time.RFC3339),
-		"retry-count":       fmt.Sprintf("%d", retryFile.RetryCount),
-		"source":            "bytefreezer-receiver",
+		"retry-count":        fmt.Sprintf("%d", retryFile.RetryCount),
+		"source":             "bytefreezer-receiver",
 	}
 
 	// Add proxy-specific metadata if available

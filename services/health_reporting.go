@@ -2,8 +2,8 @@ package services
 
 import (
 	"bytes"
-	"github.com/bytedance/sonic"
 	"fmt"
+	"github.com/bytedance/sonic"
 	"net/http"
 	"os"
 	"time"
@@ -20,7 +20,7 @@ type HealthReportingService struct {
 	reportInterval time.Duration
 	timeout        time.Duration
 	httpClient     *http.Client
-	apiKey         string                 // Bearer token for authentication
+	apiKey         string // Bearer token for authentication
 	enabled        bool
 	stopChan       chan bool
 	config         map[string]interface{} // Full configuration data to report

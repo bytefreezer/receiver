@@ -11,7 +11,7 @@ type Dataset struct {
 	ID               string            `json:"id"`
 	Name             string            `json:"name"`
 	TenantID         string            `json:"tenant_id"`
-	DataHint         string            `json:"data_hint,omitempty"`         // Data format hint for processing pipeline
+	DataHint         string            `json:"data_hint,omitempty"` // Data format hint for processing pipeline
 	ProcessingConfig *ProcessingConfig `json:"processing_config,omitempty"`
 }
 

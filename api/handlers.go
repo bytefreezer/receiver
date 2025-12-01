@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/bytefreezer/goodies/log"
 	"github.com/bytefreezer/receiver/config"
 	"github.com/bytefreezer/receiver/domain"
 	"github.com/bytefreezer/receiver/services"
-	"github.com/bytefreezer/goodies/log"
 	"github.com/swaggest/usecase"
 	"github.com/swaggest/usecase/status"
 )
@@ -41,18 +41,17 @@ type TenantCountResponse struct {
 	Count int `json:"count"`
 }
 
-
 // ConfigResponse represents the current system configuration
 type ConfigResponse struct {
-	App            AppConfig               `json:"app"`
-	Server         ServerConfig            `json:"server"`
-	Webhook        WebhookConfig           `json:"webhook"`
-	Bytefreezer    BytefreezerConfig       `json:"bytefreezer"`
-	ControlService ControlServiceConfig    `json:"control_service"`
-	SOC            SOCConfig               `json:"soc"`
-	S3Destination  S3ConfigMasked          `json:"s3_destination"`
-	Housekeeping   HousekeepingConfig      `json:"housekeeping"`
-	Dev            bool                    `json:"dev"`
+	App             AppConfig               `json:"app"`
+	Server          ServerConfig            `json:"server"`
+	Webhook         WebhookConfig           `json:"webhook"`
+	Bytefreezer     BytefreezerConfig       `json:"bytefreezer"`
+	ControlService  ControlServiceConfig    `json:"control_service"`
+	SOC             SOCConfig               `json:"soc"`
+	S3Destination   S3ConfigMasked          `json:"s3_destination"`
+	Housekeeping    HousekeepingConfig      `json:"housekeeping"`
+	Dev             bool                    `json:"dev"`
 	ComponentStatus ComponentStatusResponse `json:"component_status"`
 }
 
@@ -222,7 +221,6 @@ func (api *API) GetTenantCount() usecase.Interactor {
 
 	return u
 }
-
 
 // maskSensitiveValue masks sensitive configuration values
 func maskSensitiveValue(value string) string {

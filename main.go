@@ -11,13 +11,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/bytefreezer/goodies/log"
 	"github.com/bytefreezer/receiver/api"
 	"github.com/bytefreezer/receiver/config"
 	"github.com/bytefreezer/receiver/metrics"
 	"github.com/bytefreezer/receiver/services"
 	"github.com/bytefreezer/receiver/upload"
 	"github.com/bytefreezer/receiver/webhook"
-	"github.com/bytefreezer/goodies/log"
 	"github.com/pkg/errors"
 )
 
@@ -447,13 +447,13 @@ func buildHealthConfiguration(conf *config.Config, instanceAPI string) map[strin
 			"secret_key":  maskSensitive(conf.S3Destination.SecretKey),
 		},
 		"dlq": map[string]interface{}{
-			"enabled":                   conf.DLQ.Enabled,
-			"directory":                 conf.DLQ.Directory,
-			"max_size_bytes":            conf.DLQ.MaxSizeBytes,
-			"retry_attempts":            conf.DLQ.RetryAttempts,
-			"retry_interval_seconds":    conf.DLQ.RetryIntervalSeconds,
-			"cleanup_interval_seconds":  conf.DLQ.CleanupIntervalSeconds,
-			"max_age_days":              conf.DLQ.MaxAgeDays,
+			"enabled":                  conf.DLQ.Enabled,
+			"directory":                conf.DLQ.Directory,
+			"max_size_bytes":           conf.DLQ.MaxSizeBytes,
+			"retry_attempts":           conf.DLQ.RetryAttempts,
+			"retry_interval_seconds":   conf.DLQ.RetryIntervalSeconds,
+			"cleanup_interval_seconds": conf.DLQ.CleanupIntervalSeconds,
+			"max_age_days":             conf.DLQ.MaxAgeDays,
 		},
 		"housekeeping": map[string]interface{}{
 			"enabled":          conf.Housekeeping.Enabled,

@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
+	"github.com/bytefreezer/goodies/log"
 	"github.com/bytefreezer/receiver/config"
 	"github.com/bytefreezer/receiver/utils"
-	"github.com/bytefreezer/goodies/log"
 )
 
 // DLQFile represents a file in the Dead Letter Queue
@@ -206,7 +206,6 @@ func (d *DLQService) processQueueDirectory() error {
 	return nil
 }
 
-
 // processCleanup removes old files based on age and size limits
 func (d *DLQService) processCleanup() {
 	log.Debug("Processing DLQ cleanup...")
@@ -267,7 +266,6 @@ func (d *DLQService) loadMetadata(metaPath string) (*DLQFile, error) {
 
 	return &dlqFile, nil
 }
-
 
 // GetStats returns DLQ statistics
 func (d *DLQService) GetStats() (*DLQStats, error) {

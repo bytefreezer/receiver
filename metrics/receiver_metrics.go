@@ -197,4 +197,3 @@ func (m *ReceiverMetrics) RecordAuthFailure(ctx context.Context, tenantID, reaso
 	}
 	m.authFailures.Add(ctx, 1, metric.WithAttributes(attrs...))
 }
-

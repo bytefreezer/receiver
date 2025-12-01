@@ -7,8 +7,8 @@ import (
 	"time"
 
 	client "github.com/bytefreezer/goodies/control-client"
-	"github.com/bytefreezer/receiver/domain"
 	"github.com/bytefreezer/goodies/log"
+	"github.com/bytefreezer/receiver/domain"
 )
 
 // AppConfig represents application configuration

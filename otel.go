@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bytefreezer/receiver/config"
 	"github.com/bytefreezer/goodies/log"
+	"github.com/bytefreezer/receiver/config"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
@@ -177,4 +177,3 @@ func setupMetrics(ctx context.Context, cfg *config.Config, res *resource.Resourc
 		}
 	}, nil
 }
-

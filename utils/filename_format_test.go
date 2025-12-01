@@ -165,8 +165,8 @@ func TestFilenameValidation(t *testing.T) {
 func TestMalformedFilenameDetection(t *testing.T) {
 	// Test the malformed filename detection logic
 	testCases := []struct {
-		name       string
-		filename   string
+		name        string
+		filename    string
 		isMalformed bool
 	}{
 		{

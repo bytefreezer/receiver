@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/bytefreezer/goodies/log"
 	"github.com/bytefreezer/receiver/config"
 	"github.com/bytefreezer/receiver/domain"
-	"github.com/bytefreezer/goodies/log"
+	"github.com/go-chi/chi/v5"
 )
 
 type SecurityMiddleware struct {

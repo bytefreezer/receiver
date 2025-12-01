@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/go-chi/chi/v5"
+	"github.com/bytefreezer/goodies/log"
 	"github.com/bytefreezer/receiver/config"
 	"github.com/bytefreezer/receiver/domain"
 	"github.com/bytefreezer/receiver/services"
 	"github.com/bytefreezer/receiver/utils"
-	"github.com/bytefreezer/goodies/log"
+	"github.com/go-chi/chi/v5"
 )
 
 // UploadServer handles file upload ingestion

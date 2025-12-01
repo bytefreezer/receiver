@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bytefreezer/goodies/log"
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
-	"github.com/bytefreezer/goodies/log"
 	pkgerrors "github.com/pkg/errors"
 
 	"github.com/bytefreezer/receiver/alerts"
@@ -73,10 +73,10 @@ type ControlServiceConfig struct {
 // HealthReportingConfig represents health reporting configuration
 // Note: Uses control_service.base_url for the control service endpoint
 type HealthReportingConfig struct {
-	Enabled            bool   `mapstructure:"enabled"`
-	ReportInterval     int    `mapstructure:"report_interval"` // Interval in seconds
-	TimeoutSeconds     int    `mapstructure:"timeout_seconds"`
-	RegisterOnStartup  bool   `mapstructure:"register_on_startup"`
+	Enabled           bool `mapstructure:"enabled"`
+	ReportInterval    int  `mapstructure:"report_interval"` // Interval in seconds
+	TimeoutSeconds    int  `mapstructure:"timeout_seconds"`
+	RegisterOnStartup bool `mapstructure:"register_on_startup"`
 }
 
 type Bytefreezer struct {
