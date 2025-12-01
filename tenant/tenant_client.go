@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	client "github.com/n0needt0/go-goodies/control-client"
-	"github.com/n0needt0/bytefreezer-receiver/domain"
-	"github.com/n0needt0/go-goodies/log"
+	client "github.com/bytefreezer/goodies/control-client"
+	"github.com/bytefreezer/receiver/domain"
+	"github.com/bytefreezer/goodies/log"
 )
 
 // AppConfig represents application configuration

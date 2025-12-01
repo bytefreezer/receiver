@@ -12,15 +12,15 @@ import (
 	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
-	"github.com/n0needt0/go-goodies/log"
+	"github.com/bytefreezer/goodies/log"
 	pkgerrors "github.com/pkg/errors"
 
-	"github.com/n0needt0/bytefreezer-receiver/alerts"
-	"github.com/n0needt0/bytefreezer-receiver/domain"
-	"github.com/n0needt0/bytefreezer-receiver/errors"
-	"github.com/n0needt0/bytefreezer-receiver/metrics"
-	"github.com/n0needt0/bytefreezer-receiver/storage"
-	"github.com/n0needt0/bytefreezer-receiver/tenant"
+	"github.com/bytefreezer/receiver/alerts"
+	"github.com/bytefreezer/receiver/domain"
+	"github.com/bytefreezer/receiver/errors"
+	"github.com/bytefreezer/receiver/metrics"
+	"github.com/bytefreezer/receiver/storage"
+	"github.com/bytefreezer/receiver/tenant"
 )
 
 var k = koanf.New(".")

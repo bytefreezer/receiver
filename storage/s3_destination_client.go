@@ -11,8 +11,8 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/n0needt0/bytefreezer-receiver/domain"
-	"github.com/n0needt0/go-goodies/log"
+	"github.com/bytefreezer/receiver/domain"
+	"github.com/bytefreezer/goodies/log"
 )
 
 type S3DestinationClient struct {

@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/n0needt0/bytefreezer-receiver/config"
-	"github.com/n0needt0/bytefreezer-receiver/utils"
-	"github.com/n0needt0/go-goodies/log"
+	"github.com/bytefreezer/receiver/config"
+	"github.com/bytefreezer/receiver/utils"
+	"github.com/bytefreezer/goodies/log"
 )
 
 // parseTimestamp attempts to parse various timestamp formats to time.Time

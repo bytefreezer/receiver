@@ -12,8 +12,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/n0needt0/bytefreezer-receiver/config"
-	"github.com/n0needt0/bytefreezer-receiver/domain"
+	"github.com/bytefreezer/receiver/config"
+	"github.com/bytefreezer/receiver/domain"
 )
 
 // Test server creation and routing

@@ -11,13 +11,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/n0needt0/bytefreezer-receiver/api"
-	"github.com/n0needt0/bytefreezer-receiver/config"
-	"github.com/n0needt0/bytefreezer-receiver/metrics"
-	"github.com/n0needt0/bytefreezer-receiver/services"
-	"github.com/n0needt0/bytefreezer-receiver/upload"
-	"github.com/n0needt0/bytefreezer-receiver/webhook"
-	"github.com/n0needt0/go-goodies/log"
+	"github.com/bytefreezer/receiver/api"
+	"github.com/bytefreezer/receiver/config"
+	"github.com/bytefreezer/receiver/metrics"
+	"github.com/bytefreezer/receiver/services"
+	"github.com/bytefreezer/receiver/upload"
+	"github.com/bytefreezer/receiver/webhook"
+	"github.com/bytefreezer/goodies/log"
 	"github.com/pkg/errors"
 )
 

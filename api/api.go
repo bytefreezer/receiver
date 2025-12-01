@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/n0needt0/bytefreezer-receiver/config"
-	"github.com/n0needt0/bytefreezer-receiver/services"
-	"github.com/n0needt0/go-goodies/log"
+	"github.com/bytefreezer/receiver/config"
+	"github.com/bytefreezer/receiver/services"
+	"github.com/bytefreezer/goodies/log"
 	"github.com/swaggest/openapi-go/openapi3"
 	"github.com/swaggest/rest/web"
 	swgui "github.com/swaggest/swgui/v5emb"

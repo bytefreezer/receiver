@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/n0needt0/go-goodies/log"
+	"github.com/bytefreezer/goodies/log"
 )
 
 // DatasetMetricsClient handles sending dataset metrics to the control service

@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   bytefreezer-receiver:
-    image: ghcr.io/n0needt0/bytefreezer-receiver:latest
+    image: ghcr.io/bytefreezer/receiver:latest
     container_name: bytefreezer-receiver
     restart: unless-stopped
     

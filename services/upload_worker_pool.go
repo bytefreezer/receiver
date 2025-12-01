@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/n0needt0/bytefreezer-receiver/config"
-	"github.com/n0needt0/bytefreezer-receiver/domain"
-	"github.com/n0needt0/bytefreezer-receiver/utils"
-	"github.com/n0needt0/go-goodies/log"
+	"github.com/bytefreezer/receiver/config"
+	"github.com/bytefreezer/receiver/domain"
+	"github.com/bytefreezer/receiver/utils"
+	"github.com/bytefreezer/goodies/log"
 )
 
 type UploadWorkerPool struct {

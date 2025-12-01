@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/n0needt0/bytefreezer-receiver/config"
+	"github.com/bytefreezer/receiver/config"
 )
 
 // Test basic webhook functionality without complex dependencies

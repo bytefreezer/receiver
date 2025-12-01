@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/n0needt0/go-goodies/log"
+	"github.com/bytefreezer/goodies/log"
 )
 
 // ErrorReporter handles reporting errors to the control service with self-healing

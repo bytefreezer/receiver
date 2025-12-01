@@ -203,7 +203,7 @@ jobs:
         cat > pkg/etc/systemd/system/bytefreezer-receiver.service << 'EOF'
         [Unit]
         Description=ByteFreezer Receiver - Data collection and processing service
-        Documentation=https://github.com/n0needt0/bytefreezer-receiver
+        Documentation=https://github.com/bytefreezer/receiver
         After=network-online.target
         Wants=network-online.target
         
@@ -318,7 +318,7 @@ jobs:
           -a amd64 \
           -m "ByteFreezer <noreply@bytefreezer.io>" \
           --description "ByteFreezer Receiver - Data collection and processing service" \
-          --url "https://github.com/n0needt0/bytefreezer-receiver" \
+          --url "https://github.com/bytefreezer/receiver" \
           --license "MIT" \
           --category "network" \
           --depends "systemd" \

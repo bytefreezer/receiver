@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/n0needt0/bytefreezer-receiver/config"
-	"github.com/n0needt0/bytefreezer-receiver/domain"
-	"github.com/n0needt0/go-goodies/log"
+	"github.com/bytefreezer/receiver/config"
+	"github.com/bytefreezer/receiver/domain"
+	"github.com/bytefreezer/goodies/log"
 )
 
 type SecurityMiddleware struct {

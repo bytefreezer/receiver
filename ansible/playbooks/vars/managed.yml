@@ -2,7 +2,7 @@
 # ByteFreezer Receiver - Centralized Variables Configuration
 
 # GitHub repository
-github_repo: "n0needt0/bytefreezer-receiver"
+github_repo: "bytefreezer/receiver"
 version: "{{ bytefreezer_receiver_version | default('latest') }}"
 
 # Service configuration
@@ -123,7 +123,7 @@ download:
 
 # Docker image configuration for docker_install.yml
 docker:
-  image_name: "ghcr.io/n0needt0/bytefreezer-receiver"
+  image_name: "ghcr.io/bytefreezer/receiver"
   tag: "{{ bytefreezer_receiver_version | default('latest') }}"
   force_pull: false  # Set to true to always pull latest image
 

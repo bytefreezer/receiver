@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/n0needt0/go-goodies/log"
+	"github.com/bytefreezer/goodies/log"
 )
 
 // HealthReportingService handles health reporting to the control service

@@ -1,7 +1,7 @@
 package services
 
 import (
-	"github.com/n0needt0/bytefreezer-receiver/config"
+	"github.com/bytefreezer/receiver/config"
 )
 
 type Services struct {
