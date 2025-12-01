@@ -110,8 +110,7 @@ jobs:
         mkdir -p release
         tar -czf release/${{ env.BINARY_NAME }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz \
           ${{ env.BINARY_NAME }}-${{ matrix.os }}-${{ matrix.arch }} \
-          config.yaml \
-          README.md
+          config.yaml
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
