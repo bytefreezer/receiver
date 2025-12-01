@@ -396,9 +396,7 @@ func (up *UploadWorkerPool) processQueueFile(dataPath string) error {
 		// Format: tenant--dataset--timestamp.xxx.gz (where xxx is any extension)
 		timestampPart := parts[2]
 		// Remove any .gz extension (could be .ndjson.gz, .csv.gz, etc.)
-		if strings.HasSuffix(timestampPart, ".gz") {
-			timestampPart = strings.TrimSuffix(timestampPart, ".gz")
-		}
+		timestampPart = strings.TrimSuffix(timestampPart, ".gz")
 		log.Debugf("Parsing timestamp from filename %s, extracted: %s", filename, timestampPart)
 
 		// Try different timestamp formats the proxy might use
