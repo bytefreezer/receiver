@@ -63,7 +63,7 @@ protocols:
   # Webhook ingestion - HTTP POST endpoints
   webhook:
     enabled: {{ config.protocols.webhook.enabled | default(true) | lower }}
-    port: {{ config.protocols.webhook.port | default(8082) }}
+    port: {{ webhook_port | default(config.protocols.webhook.port) | default(8080) }}
     max_payload_size: {{ config.protocols.webhook.max_payload_size | default(10485760) }}
   # File upload ingestion - batch file uploads (raw data)
   upload:

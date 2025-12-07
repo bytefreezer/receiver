@@ -82,7 +82,7 @@ config:
   protocols:
     webhook:
       enabled: true
-      port: "{{ webhook_port }}"
+      port: 8080  # Override via AWX survey variable 'webhook_port'
       max_payload_size: 10485760  # 10MB
     upload:
       enabled: false  # Disabled by default - enable for file uploads
