@@ -135,4 +135,3 @@ remove:
 force_reinstall: "{{ force_reinstall | default(false) }}"
 skip_validation: "{{ skip_validation | default(false) }}"
 enable_debug_logging: "{{ enable_debug_logging | default(false) }}"
-webhook_port: "{{ webhook_port | default(8080) }}"
