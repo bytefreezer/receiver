@@ -42,8 +42,8 @@ bytefreezer:
 # Control Service configuration (replaces dev mode and legacy controller)
 control_service:
   enabled: true
-  base_url: "http://192.168.86.103:8082"
-  api_key: "bytefreezer-service-api-key-8f4a2d1b-3c5e-4f6a-9b8c-7d2e1f3a4b5c"  # System-wide service API key
+  control_url: "REPLACE_WITH_AWX_VARIABLE_bytefreezer_control_url"
+  api_key: "REPLACE_WITH_AWX_VARIABLE_bytefreezer_api_key"  # System-wide service API key
   timeout_seconds: 30
 
 # Authentication configuration
@@ -68,12 +68,12 @@ housekeeping:
 # S3 destination for storing raw webhook data (raw/ prefix)
 # Data layout: {tenantid}/{datasetid}/filename.ndjson.gz (simplified for transient files)
 s3destination:
-  bucket_name: "bytefreezer-data"  # Shared bucket for all three services
+  bucket_name: "intake"
   region: "us-east-1"
-  endpoint: "192.168.86.125:9000"  # Your MinIO endpoint
+  endpoint: "REPLACE_WITH_AWX_VARIABLE_bytefreezer_s3_endpoint"
   ssl: false
-  access_key: "AKIAQNXBAHUKIMJP26P6"
-  secret_key: "SECRET_KEY_AKIAQNXBAHUKIMJP26P6"
+  access_key: "REPLACE_WITH_AWX_VARIABLE_bytefreezer_s3_access_key"
+  secret_key: "REPLACE_WITH_AWX_VARIABLE_bytefreezer_s3_secret_key"
   use_iam_role: false
 
 
@@ -95,7 +95,7 @@ dlq:
 dev: false  # Disabled - using Control Service instead (see control_service config above)
 
 # Health reporting configuration for service registration and monitoring
-# Note: Uses control_service.base_url for the control service endpoint
+# Note: Uses control_service.control_url for the control service endpoint
 health_reporting:
   enabled: true
   report_interval: 30

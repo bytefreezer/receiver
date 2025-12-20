@@ -101,7 +101,7 @@ func Run() error {
 
 	// Initialize health reporting service
 	var healthReportingService *services.HealthReportingService
-	if conf.HealthReporting.Enabled && conf.ControlService.BaseURL != "" {
+	if conf.HealthReporting.Enabled && conf.ControlService.ControlURL != "" {
 		reportInterval := time.Duration(conf.HealthReporting.ReportInterval) * time.Second
 		if reportInterval <= 0 {
 			reportInterval = 5 * time.Minute // Default 5 minutes
@@ -127,7 +127,7 @@ func Run() error {
 		configuration := buildHealthConfiguration(&conf, instanceAPI)
 
 		healthReportingService = services.NewHealthReportingService(
-			conf.ControlService.BaseURL,
+			conf.ControlService.ControlURL,
 			"bytefreezer-receiver",
 			instanceAPI,
 			conf.ControlService.APIKey, // System API key for authentication
@@ -146,7 +146,7 @@ func Run() error {
 		// Start health reporting
 		healthReportingService.Start()
 		defer healthReportingService.Stop()
-		log.Infof("Health reporting service started - reporting to %s every %v", conf.ControlService.BaseURL, reportInterval)
+		log.Infof("Health reporting service started - reporting to %s every %v", conf.ControlService.ControlURL, reportInterval)
 	} else {
 		log.Info("Health reporting is disabled")
 	}
@@ -474,10 +474,10 @@ func buildHealthConfiguration(conf *config.Config, instanceAPI string) map[strin
 			"interval_seconds": conf.Housekeeping.IntervalSeconds,
 		},
 		"control_service": map[string]interface{}{
-			"enabled":  conf.ControlService.Enabled,
-			"base_url": conf.ControlService.BaseURL,
-			"api_key":  maskSensitive(conf.ControlService.APIKey),
-			"timeout":  conf.ControlService.TimeoutSeconds,
+			"enabled":     conf.ControlService.Enabled,
+			"control_url": conf.ControlService.ControlURL,
+			"api_key":     maskSensitive(conf.ControlService.APIKey),
+			"timeout":     conf.ControlService.TimeoutSeconds,
 		},
 		"authentication": map[string]interface{}{
 			"enabled": conf.Authentication.Enabled,
@@ -507,7 +507,7 @@ func buildHealthConfiguration(conf *config.Config, instanceAPI string) map[strin
 // cleanupStaleOperations marks all in-progress operations for this instance as interrupted
 // This allows the system to self-heal on restart - files will be picked up on next processing cycle
 func cleanupStaleOperations(cfg *config.Config) {
-	if cfg.ControlService.BaseURL == "" {
+	if cfg.ControlService.ControlURL == "" {
 		log.Debug("Control service URL not configured, skipping operation cleanup")
 		return
 	}
@@ -532,7 +532,7 @@ func cleanupStaleOperations(cfg *config.Config) {
 	}
 
 	client := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest("POST", cfg.ControlService.BaseURL+"/api/v1/activity/operations/cleanup", bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", cfg.ControlService.ControlURL+"/api/v1/activity/operations/cleanup", bytes.NewBuffer(body))
 	if err != nil {
 		log.Warnf("Failed to create cleanup request: %v", err)
 		return

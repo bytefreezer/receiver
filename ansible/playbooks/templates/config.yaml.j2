@@ -24,8 +24,8 @@ bytefreezer:
 # Control Service configuration (replaces dev mode and legacy controller)
 control_service:
   enabled: {{ config.control_service.enabled | lower }}
-  base_url: {{ config.control_service.base_url }}
-  api_key: "{{ config.control_service.api_key | default('bytefreezer-service-api-key-8f4a2d1b-3c5e-4f6a-9b8c-7d2e1f3a4b5c') }}"
+  control_url: "{{ bytefreezer_control_url }}"
+  api_key: "{{ bytefreezer_api_key }}"
   timeout_seconds: {{ config.control_service.timeout_seconds }}
 
 # Authentication configuration
@@ -49,13 +49,14 @@ housekeeping:
   intervalseconds: {{ config.housekeeping.intervalseconds }}
 
 # S3 destination configuration
+# Credentials come from AWX variables: bytefreezer_s3_endpoint, bytefreezer_s3_access_key, bytefreezer_s3_secret_key
 s3destination:
   bucket_name: {{ config.s3destination.bucket_name }}
   region: {{ config.s3destination.region }}
-  endpoint: {{ config.s3destination.endpoint }}
+  endpoint: "{{ bytefreezer_s3_endpoint }}"
   ssl: {{ config.s3destination.ssl | lower }}
-  access_key: {{ config.s3destination.access_key }}
-  secret_key: {{ config.s3destination.secret_key }}
+  access_key: "{{ bytefreezer_s3_access_key }}"
+  secret_key: "{{ bytefreezer_s3_secret_key }}"
   use_iam_role: {{ config.s3destination.use_iam_role | default(false) | lower }}
 
 # Raw data ingestion - format-agnostic processing
@@ -83,14 +84,14 @@ dlq:
   cleanup_interval_seconds: {{ config.dlq.cleanup_interval_seconds }}
   max_age_days: {{ config.dlq.max_age_days }}
 
-# Health reporting configuration (uses control_service.base_url)
+# Health reporting configuration (uses control_service.control_url)
 health_reporting:
   enabled: {{ config.health_reporting.enabled | default(true) | lower }}
   report_interval: {{ config.health_reporting.report_interval | default(30) }}
   timeout_seconds: {{ config.health_reporting.timeout_seconds | default(10) }}
   register_on_startup: {{ config.health_reporting.register_on_startup | default(true) | lower }}
 
-# Error tracking configuration (uses control_service.base_url)
+# Error tracking configuration (uses control_service.control_url)
 error_tracking:
   enabled: {{ config.error_tracking.enabled | default(true) | lower }}
 

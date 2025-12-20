@@ -79,7 +79,7 @@ type BytefreezerConfig struct {
 
 type ControlServiceConfig struct {
 	Enabled        bool   `json:"enabled"`
-	BaseURL        string `json:"base_url"`
+	ControlURL     string `json:"control_url"`
 	APIKey         string `json:"api_key"` // Will be masked
 	TimeoutSeconds int    `json:"timeout_seconds"`
 }
@@ -266,7 +266,7 @@ func (api *API) GetConfig() usecase.Interactor {
 		// Control Service configuration (with masked API key)
 		output.ControlService = ControlServiceConfig{
 			Enabled:        cfg.ControlService.Enabled,
-			BaseURL:        cfg.ControlService.BaseURL,
+			ControlURL:     cfg.ControlService.ControlURL,
 			APIKey:         maskSensitiveValue(cfg.ControlService.APIKey),
 			TimeoutSeconds: cfg.ControlService.TimeoutSeconds,
 		}

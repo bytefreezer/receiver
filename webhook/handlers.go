@@ -395,7 +395,7 @@ func (ws *WebhookServer) recordThroughput(accountID, tenantID, datasetID string,
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	url := ws.config.ControlService.BaseURL + "/api/v1/activity/receiver/throughput"
+	url := ws.config.ControlService.ControlURL + "/api/v1/activity/receiver/throughput"
 
 	payload := map[string]interface{}{
 		"account_id":     accountID,

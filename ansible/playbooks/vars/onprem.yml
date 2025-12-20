@@ -44,10 +44,10 @@ config:
     spool_path: "/var/spool/bytefreezer-receiver"
 
   # Control Service configuration (replaces dev mode and legacy controller)
+  # control_url comes from AWX variable: bytefreezer_control_url
   control_service:
     enabled: true
-    base_url: "http://192.168.86.103:8082"
-    api_key: "bytefreezer-service-api-key-8f4a2d1b-3c5e-4f6a-9b8c-7d2e1f3a4b5c"
+    # api_key comes from AWX variable: bytefreezer_api_key
     timeout_seconds: 30
 
   # Authentication configuration
@@ -69,13 +69,11 @@ config:
     intervalseconds: 60
 
   # S3 destination - On-prem deployment configuration
+  # Credentials come from AWX variables: bytefreezer_s3_endpoint, bytefreezer_s3_access_key, bytefreezer_s3_secret_key
   s3destination:
     bucket_name: "intake-onprem"
     region: "us-east-1"
-    endpoint: "192.168.86.125:9000"
     ssl: false
-    access_key: "AKIAQNXBAHUKIMJP26P6"
-    secret_key: "SECRET_KEY_AKIAQNXBAHUKIMJP26P6"
     use_iam_role: false
 
   # Raw data ingestion protocols
@@ -105,7 +103,7 @@ config:
   dev: false  # Disabled - using Control Service (see control_service above)
 
   # Health reporting configuration for service registration and monitoring
-  # Note: Uses control_service.base_url for the control service endpoint
+  # Note: Uses control_service.control_url for the control service endpoint
   health_reporting:
     enabled: true
     report_interval: 30
@@ -113,7 +111,7 @@ config:
     register_on_startup: true
 
   # Error tracking configuration for centralized error monitoring
-  # Note: Uses control_service.base_url for the control service endpoint
+  # Note: Uses control_service.control_url for the control service endpoint
   error_tracking:
     enabled: true  # Enable by default to collect errors from receiver service
 
@@ -132,6 +130,5 @@ remove:
   spool_dir: "{{ bytefreezer_receiver_remove_spool_dir | default(false) }}"
 
 # AWX Survey Variables (Override via job template surveys)
-force_reinstall: "{{ force_reinstall | default(false) }}"
 skip_validation: "{{ skip_validation | default(false) }}"
 enable_debug_logging: "{{ enable_debug_logging | default(false) }}"
