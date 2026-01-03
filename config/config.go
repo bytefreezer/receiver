@@ -119,13 +119,17 @@ type S3Destination struct {
 }
 
 type Otel struct {
-	Enabled               bool   `mapstructure:"enabled"`
-	Endpoint              string `mapstructure:"endpoint"`
-	ServiceName           string `mapstructure:"service_name"`
-	ScrapeIntervalSeconds int    `mapstructure:"scrapeIntervalseconds"`
-	PrometheusMode        bool   `mapstructure:"prometheus_mode"`
-	MetricsPort           int    `mapstructure:"metrics_port"`
-	MetricsHost           string `mapstructure:"metrics_host"`
+	Enabled             bool   `mapstructure:"enabled"`
+	Mode                string `mapstructure:"mode"` // "prometheus" (pull), "otlp_http" (push to Prometheus), "otlp_grpc" (push to collector)
+	OTLPEndpoint        string `mapstructure:"otlp_endpoint"`
+	PushIntervalSeconds int    `mapstructure:"push_interval_seconds"`
+	ServiceName         string `mapstructure:"service_name"`
+	MetricsHost         string `mapstructure:"metrics_host"`
+	MetricsPort         int    `mapstructure:"metrics_port"`
+	// Deprecated fields for backwards compatibility
+	Endpoint              string `mapstructure:"endpoint"`              // Deprecated: use otlp_endpoint
+	ScrapeIntervalSeconds int    `mapstructure:"scrapeIntervalseconds"` // Deprecated: use push_interval_seconds
+	PrometheusMode        bool   `mapstructure:"prometheus_mode"`       // Deprecated: use mode
 }
 
 type SOCAlert struct {

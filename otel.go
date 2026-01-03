@@ -11,95 +11,90 @@ import (
 
 	"github.com/bytefreezer/goodies/log"
 	"github.com/bytefreezer/receiver/config"
+
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/exporters/prometheus"
-	"go.opentelemetry.io/otel/sdk/instrumentation"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 )
 
+// initOTEL initializes the OpenTelemetry provider with multi-mode support
+// Modes:
+//   - "prometheus": Expose /metrics endpoint for Prometheus to scrape (pull)
+//   - "otlp_http": Push metrics to Prometheus OTLP receiver via HTTP
+//   - "otlp_grpc": Push metrics to OpenTelemetry Collector via gRPC
 func initOTEL(cfg *config.Config) (func(), error) {
+	if !cfg.Otel.Enabled {
+		log.Info("OpenTelemetry metrics disabled")
+		return func() {}, nil
+	}
+
 	ctx := context.Background()
 
-	// Create resource with service information
+	// Determine service name
+	serviceName := cfg.Otel.ServiceName
+	if serviceName == "" {
+		serviceName = cfg.App.Name
+	}
+
+	// Create a resource
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
-			semconv.ServiceNameKey.String(cfg.Otel.ServiceName),
-			semconv.ServiceVersionKey.String(cfg.App.Version),
+			semconv.ServiceName(serviceName),
+			semconv.ServiceVersion(cfg.App.Version),
 		),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create resource: %w", err)
 	}
 
-	// Set up trace provider
-	traceCleanup, err := setupTracing(ctx, cfg, res)
-	if err != nil {
-		return nil, fmt.Errorf("failed to setup tracing: %w", err)
-	}
-
-	// Set up metric provider
-	metricCleanup, err := setupMetrics(ctx, cfg, res)
-	if err != nil {
-		traceCleanup()
-		return nil, fmt.Errorf("failed to setup metrics: %w", err)
-	}
-
-	log.Infof("OTEL initialized with endpoint: %s", cfg.Otel.Endpoint)
-
-	return func() {
-		metricCleanup()
-		traceCleanup()
-		log.Info("OTEL cleanup completed")
-	}, nil
-}
-
-func setupTracing(ctx context.Context, cfg *config.Config, res *resource.Resource) (func(), error) {
-	// Create trace exporter
-	traceExporter, err := otlptracegrpc.New(ctx,
-		otlptracegrpc.WithEndpoint(cfg.Otel.Endpoint),
-		otlptracegrpc.WithInsecure(),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
-	}
-
-	// Create trace provider
-	traceProvider := sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(traceExporter),
-		sdktrace.WithResource(res),
-	)
-
-	otel.SetTracerProvider(traceProvider)
-
-	return func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := traceProvider.Shutdown(ctx); err != nil {
-			log.Errorf("Failed to shutdown trace provider: %v", err)
-		}
-	}, nil
-}
-
-func setupMetrics(ctx context.Context, cfg *config.Config, res *resource.Resource) (func(), error) {
-	var metricProvider *sdkmetric.MeterProvider
+	var meterProvider *sdkmetric.MeterProvider
 	var httpServer *http.Server
 
-	if cfg.Otel.PrometheusMode {
-		// Prometheus HTTP metrics endpoint
+	// Determine mode - support backwards compatibility with PrometheusMode
+	mode := cfg.Otel.Mode
+	if mode == "" {
+		// Backwards compatibility
+		if cfg.Otel.PrometheusMode {
+			mode = "prometheus"
+		} else if cfg.Otel.Endpoint != "" || cfg.Otel.OTLPEndpoint != "" {
+			mode = "otlp_grpc" // Default to gRPC for backwards compatibility
+		} else {
+			mode = "prometheus"
+		}
+	}
+
+	// Get OTLP endpoint - support backwards compatibility
+	otlpEndpoint := cfg.Otel.OTLPEndpoint
+	if otlpEndpoint == "" {
+		otlpEndpoint = cfg.Otel.Endpoint // Backwards compatibility
+	}
+
+	// Get push interval - support backwards compatibility
+	pushIntervalSec := cfg.Otel.PushIntervalSeconds
+	if pushIntervalSec <= 0 {
+		pushIntervalSec = cfg.Otel.ScrapeIntervalSeconds // Backwards compatibility
+	}
+	if pushIntervalSec <= 0 {
+		pushIntervalSec = 15
+	}
+	pushInterval := time.Duration(pushIntervalSec) * time.Second
+
+	switch mode {
+	case "prometheus":
+		// Prometheus pull mode - expose /metrics endpoint
 		prometheusExporter, err := prometheus.New()
 		if err != nil {
 			return nil, fmt.Errorf("failed to create prometheus exporter: %w", err)
 		}
 
-		metricProvider = sdkmetric.NewMeterProvider(
-			sdkmetric.WithReader(prometheusExporter),
+		meterProvider = sdkmetric.NewMeterProvider(
 			sdkmetric.WithResource(res),
+			sdkmetric.WithReader(prometheusExporter),
 		)
 
 		// Start HTTP server for metrics endpoint
@@ -108,75 +103,104 @@ func setupMetrics(ctx context.Context, cfg *config.Config, res *resource.Resourc
 
 		metricsHost := cfg.Otel.MetricsHost
 		if metricsHost == "" {
-			metricsHost = "localhost"
+			metricsHost = "0.0.0.0"
 		}
 
 		httpServer = &http.Server{
 			Addr:              fmt.Sprintf("%s:%d", metricsHost, cfg.Otel.MetricsPort),
 			Handler:           mux,
-			ReadHeaderTimeout: 30 * time.Second, // Prevent Slowloris attacks
+			ReadHeaderTimeout: 10 * time.Second,
+			ReadTimeout:       30 * time.Second,
+			WriteTimeout:      30 * time.Second,
+			IdleTimeout:       120 * time.Second,
 		}
 
 		go func() {
-			log.Infof("Starting Prometheus metrics server on port %d", cfg.Otel.MetricsPort)
+			log.Infof("Starting Prometheus metrics server on %s", httpServer.Addr)
 			if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				log.Errorf("Prometheus metrics server failed: %v", err)
+				log.Errorf("Failed to start metrics server: %v", err)
 			}
 		}()
 
-		log.Infof("Prometheus metrics endpoint: http://localhost:%d/metrics", cfg.Otel.MetricsPort)
-	} else {
-		// OTLP gRPC exporter (original behavior)
-		metricExporter, err := otlpmetricgrpc.New(ctx,
-			otlpmetricgrpc.WithEndpoint(cfg.Otel.Endpoint),
+		log.Infof("OpenTelemetry initialized in Prometheus mode on %s:%d/metrics",
+			metricsHost, cfg.Otel.MetricsPort)
+
+	case "otlp_http":
+		// OTLP HTTP push mode - push to Prometheus OTLP receiver
+		if otlpEndpoint == "" {
+			return nil, fmt.Errorf("OTLP HTTP mode requires otlp_endpoint to be set")
+		}
+
+		exporter, err := otlpmetrichttp.New(ctx,
+			otlpmetrichttp.WithEndpoint(otlpEndpoint),
+			otlpmetrichttp.WithInsecure(),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create OTLP HTTP exporter: %w", err)
+		}
+
+		meterProvider = sdkmetric.NewMeterProvider(
+			sdkmetric.WithResource(res),
+			sdkmetric.WithReader(sdkmetric.NewPeriodicReader(
+				exporter,
+				sdkmetric.WithInterval(pushInterval),
+			)),
+		)
+
+		log.Infof("OpenTelemetry initialized in OTLP HTTP push mode to %s (interval: %v)",
+			otlpEndpoint, pushInterval)
+
+	case "otlp_grpc":
+		// OTLP gRPC push mode - push to OpenTelemetry Collector
+		if otlpEndpoint == "" {
+			return nil, fmt.Errorf("OTLP gRPC mode requires otlp_endpoint to be set")
+		}
+
+		exporter, err := otlpmetricgrpc.New(ctx,
+			otlpmetricgrpc.WithEndpoint(otlpEndpoint),
 			otlpmetricgrpc.WithInsecure(),
 		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create OTLP metric exporter: %w", err)
+			return nil, fmt.Errorf("failed to create OTLP gRPC exporter: %w", err)
 		}
 
-		metricProvider = sdkmetric.NewMeterProvider(
-			sdkmetric.WithReader(sdkmetric.NewPeriodicReader(
-				metricExporter,
-				sdkmetric.WithInterval(time.Duration(cfg.Otel.ScrapeIntervalSeconds)*time.Second),
-			)),
+		meterProvider = sdkmetric.NewMeterProvider(
 			sdkmetric.WithResource(res),
-			sdkmetric.WithView(
-				// Add custom views if needed
-				sdkmetric.NewView(
-					sdkmetric.Instrument{
-						Name: "bytefreezer_receiver_*",
-						Scope: instrumentation.Scope{
-							Name: cfg.Otel.ServiceName,
-						},
-					},
-					sdkmetric.Stream{
-						Aggregation: sdkmetric.AggregationDefault{},
-					},
-				),
-			),
+			sdkmetric.WithReader(sdkmetric.NewPeriodicReader(
+				exporter,
+				sdkmetric.WithInterval(pushInterval),
+			)),
 		)
 
-		log.Infof("OTLP metrics configured for endpoint: %s", cfg.Otel.Endpoint)
+		log.Infof("OpenTelemetry initialized in OTLP gRPC push mode to %s (interval: %v)",
+			otlpEndpoint, pushInterval)
+
+	default:
+		return nil, fmt.Errorf("unknown monitoring mode: %s (valid: prometheus, otlp_http, otlp_grpc)", mode)
 	}
 
-	otel.SetMeterProvider(metricProvider)
+	// Set the global meter provider
+	otel.SetMeterProvider(meterProvider)
 
+	log.Infof("OTEL initialized with mode: %s", mode)
+
+	// Return shutdown function
 	return func() {
-		// Shutdown HTTP server if running
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		// Shutdown HTTP server if running (prometheus mode)
 		if httpServer != nil {
-			shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
-			if err := httpServer.Shutdown(shutdownCtx); err != nil {
-				log.Errorf("Failed to shutdown Prometheus metrics server: %v", err)
+			if err := httpServer.Shutdown(ctx); err != nil {
+				log.Errorf("Failed to shutdown metrics server: %v", err)
 			}
 		}
 
-		// Shutdown metric provider
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := metricProvider.Shutdown(ctx); err != nil {
+		// Shutdown meter provider
+		if err := meterProvider.Shutdown(ctx); err != nil {
 			log.Errorf("Failed to shutdown metric provider: %v", err)
 		}
+
+		log.Info("OTEL cleanup completed")
 	}, nil
 }
