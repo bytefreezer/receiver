@@ -158,10 +158,24 @@ jobs:
         images: ghcr.io/${{ github.repository_owner }}/${{ env.BINARY_NAME }}
         tags: |
           type=ref,event=branch
+          type=sha,prefix=sha-
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
           type=semver,pattern={{major}}
-          type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+    - name: Debug metadata outputs
+      run: |
+        echo "Tags: ${{ steps.meta.outputs.tags }}"
+        echo "Labels: ${{ steps.meta.outputs.labels }}"
+
+    - name: Generate fallback tag
+      id: fallback
+      run: |
+        SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+        FALLBACK_TAG="ghcr.io/${{ github.repository_owner }}/${{ env.BINARY_NAME }}:sha-${SHORT_SHA}"
+        echo "tag=${FALLBACK_TAG}" >> $GITHUB_OUTPUT
+        echo "Fallback tag: ${FALLBACK_TAG}"
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
@@ -170,7 +184,7 @@ jobs:
         file: Dockerfile.release
         platforms: linux/amd64
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
+        tags: ${{ steps.meta.outputs.tags || steps.fallback.outputs.tag }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
