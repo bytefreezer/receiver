@@ -1,0 +1,51 @@
+# Dockerfile for release builds using pre-built binary
+FROM alpine:3.19
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    curl \
+    && rm -rf /var/cache/apk/*
+
+# Create non-root user for security
+RUN addgroup -g 1000 -S bytefreezer && \
+    adduser -u 1000 -S bytefreezer -G bytefreezer -s /bin/sh -D
+
+# Create required directories
+RUN mkdir -p /etc/bytefreezer-receiver \
+             /var/log/bytefreezer-receiver \
+             /var/spool/bytefreezer-receiver && \
+    chown -R bytefreezer:bytefreezer /etc/bytefreezer-receiver \
+                                    /var/log/bytefreezer-receiver \
+                                    /var/spool/bytefreezer-receiver
+
+# Copy pre-built binary from build context
+COPY bytefreezer-receiver /bytefreezer-receiver
+RUN chmod +x /bytefreezer-receiver
+
+# Copy default configuration
+COPY --chown=bytefreezer:bytefreezer config.yaml /etc/bytefreezer-receiver/config.yaml
+
+# Switch to non-root user
+USER bytefreezer
+
+# Set environment variables
+ENV CONFIG_FILE=/etc/bytefreezer-receiver/config.yaml
+
+# Expose ports
+EXPOSE 8080/tcp 8081/tcp 9091/tcp
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8081/api/v1/health || exit 1
+
+WORKDIR /
+
+CMD ["/bytefreezer-receiver", "--config", "/etc/bytefreezer-receiver/config.yaml"]
+
+LABEL maintainer="ByteFreezer Team" \
+      org.opencontainers.image.title="ByteFreezer Receiver" \
+      org.opencontainers.image.description="HTTP webhook receiver for ByteFreezer platform" \
+      org.opencontainers.image.vendor="ByteFreezer" \
+      org.opencontainers.image.source="https://github.com/bytefreezer/bytefreezer"
