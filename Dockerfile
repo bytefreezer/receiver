@@ -1,6 +1,6 @@
 # Multi-stage build for ByteFreezer Receiver
 # Stage 1: Build the Go binary
-FROM golang:1.24.4 AS builder
+FROM golang:1.24.11 AS builder
 
 # Set working directory
 WORKDIR /src
