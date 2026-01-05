@@ -36,4 +36,4 @@ ansible/dist/
 *.DS_Store
 
 distribution/docker/bytefreezer-cacheCLAUDE.md
-ansible/playbooks/dist/
+#ansible/playbooks/dist/
