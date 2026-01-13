@@ -323,7 +323,6 @@ func (cfg *Config) InitializeComponents() error {
 			Name:    cfg.App.Name,
 			Version: cfg.App.Version,
 		},
-		Bytefreezer: tenant.BytefreezerConfig{},
 		ControlService: tenant.ControlServiceConfig{
 			Enabled:        cfg.ControlService.Enabled,
 			ControlURL:     cfg.ControlService.ControlURL,

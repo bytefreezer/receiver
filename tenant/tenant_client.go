@@ -20,11 +20,6 @@ type AppConfig struct {
 	Version string `mapstructure:"version"`
 }
 
-// BytefreezerConfig represents bytefreezer configuration (deprecated - keeping for backwards compatibility)
-type BytefreezerConfig struct {
-	// All fields moved to control_service configuration
-}
-
 // ControlServiceConfig represents control service configuration
 type ControlServiceConfig struct {
 	Enabled        bool   `mapstructure:"enabled"`
@@ -36,7 +31,6 @@ type ControlServiceConfig struct {
 // TenantClientConfig represents config needed by TenantClient
 type TenantClientConfig struct {
 	App            AppConfig            `mapstructure:"app"`
-	Bytefreezer    BytefreezerConfig    `mapstructure:"bytefreezer"`
 	ControlService ControlServiceConfig `mapstructure:"control_service"`
 	Dev            bool                 `mapstructure:"dev"` // Deprecated - use control_service
 }

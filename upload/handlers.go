@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -89,14 +88,7 @@ func (us *UploadServer) handleFileUpload(w http.ResponseWriter, r *http.Request)
 	}
 	defer file.Close()
 
-	// Validate file extension
 	filename := header.Filename
-	ext := strings.ToLower(filepath.Ext(filename))
-	if !us.isAllowedExtension(ext) {
-		log.Warnf("Disallowed file extension %s for file %s", ext, filename)
-		http.Error(w, "File extension not allowed", http.StatusBadRequest)
-		return
-	}
 
 	// Check file size
 	if header.Size > int64(us.config.Protocols.Upload.MaxFileSize) {
@@ -219,13 +211,6 @@ func (us *UploadServer) handleFileUpload(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Upload timeout", http.StatusRequestTimeout)
 		return
 	}
-}
-
-// isAllowedExtension checks if the file extension is allowed
-// For raw data mode, accept any file type
-func (us *UploadServer) isAllowedExtension(ext string) bool {
-	// In raw data mode, accept any file extension
-	return true
 }
 
 // Note: Line counting and format-specific functions removed - raw data only
