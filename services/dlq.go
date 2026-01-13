@@ -133,12 +133,6 @@ func (d *DLQService) Stop() {
 	log.Info("DLQ service stopped")
 }
 
-// StoreFailedUpload is deprecated - DLQ progression is handled by upload worker
-// Files move from retry -> dlq directly via the upload worker moveRetryToDLQ function
-func (d *DLQService) StoreFailedUpload(tenantID, datasetID, s3Key string, data []byte, lineCount, originalSize int64, failureReason string) error {
-	return fmt.Errorf("StoreFailedUpload is deprecated - use upload worker DLQ progression")
-}
-
 // retryWorker periodically retries failed uploads
 func (d *DLQService) retryWorker() {
 	defer d.wg.Done()
@@ -189,24 +183,10 @@ func (d *DLQService) cleanupWorker() {
 	}
 }
 
-// processRetries processes files in queue and retry directories
+// processRetries is a placeholder for future retry logic
+// Currently, DLQ processing is handled by upload worker scanning retry directories
 func (d *DLQService) processRetries() {
-	log.Debug("Processing DLQ retries...")
-
-	// Process queue directory
-	if err := d.processQueueDirectory(); err != nil {
-		log.Warnf("Failed to process DLQ queue directory: %v", err)
-	}
-
-	// No retry directory processing needed with direct queue approach
-}
-
-// processQueueDirectory - Not used in new architecture
-// DLQ processing is handled by upload worker scanning retry directories
-func (d *DLQService) processQueueDirectory() error {
-	// Queue processing is handled by merge worker (queue -> retry)
-	// No direct DLQ processing from queue
-	return nil
+	log.Debug("DLQ retry check complete - retry processing handled by upload workers")
 }
 
 // processCleanup removes old files based on age and size limits
