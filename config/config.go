@@ -52,7 +52,6 @@ type Config struct {
 	ErrorReporter        *errors.ErrorReporter        `mapstructure:"-"`
 	UploadWorkerPool     interface{}                  `mapstructure:"-"` // Interface to avoid import cycles
 	DLQService           interface{}                  `mapstructure:"-"` // Interface to avoid import cycles
-	WebhookMetrics       interface{}                  `mapstructure:"-"` // Interface to avoid import cycles
 	ReceiverMetrics      interface{}                  `mapstructure:"-"` // Interface to avoid import cycles
 	DatasetMetricsClient interface{}                  `mapstructure:"-"` // Interface to avoid import cycles
 }

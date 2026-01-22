@@ -10,7 +10,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -92,7 +91,6 @@ type UploadStats struct {
 	SuccessfulJobs int64
 	FailedJobs     int64
 	RetriedJobs    int64
-	CachedJobs     int64
 	TotalBytes     int64
 	AverageTime    time.Duration
 	WorkersActive  int
@@ -397,32 +395,12 @@ func (up *UploadWorkerPool) processQueueFile(dataPath string) error {
 	var originalTimestamp string
 	if parts := strings.Split(filename, "--"); len(parts) >= 3 {
 		// Format: tenant--dataset--timestamp.xxx.gz (where xxx is any extension)
-		timestampPart := parts[2]
-		// Remove any .gz extension (could be .ndjson.gz, .csv.gz, etc.)
-		timestampPart = strings.TrimSuffix(timestampPart, ".gz")
+		timestampPart := strings.TrimSuffix(parts[2], ".gz")
 		log.Debugf("Parsing timestamp from filename %s, extracted: %s", filename, timestampPart)
 
-		// Try different timestamp formats the proxy might use
-		timeFormats := []string{
-			"20060102-150405",  // YYYYMMDD-HHMMSS format
-			"20060102T150405Z", // ISO-like format
-			"1136239445",       // Unix timestamp (string) - placeholder format
-		}
-
-		for _, format := range timeFormats {
-			if format == "1136239445" { // Unix timestamp detection
-				if unixTime, err := strconv.ParseInt(timestampPart, 10, 64); err == nil {
-					originalTimestamp = time.Unix(unixTime, 0).UTC().Format(time.RFC3339)
-					log.Debugf("Parsed unix timestamp %d -> %s", unixTime, originalTimestamp)
-					break
-				}
-			} else {
-				if parsedTime, err := time.Parse(format, timestampPart); err == nil {
-					originalTimestamp = parsedTime.UTC().Format(time.RFC3339)
-					log.Debugf("Parsed time with format %s -> %s", format, originalTimestamp)
-					break
-				}
-			}
+		if parsedTime := parseTimestamp(timestampPart); !parsedTime.IsZero() {
+			originalTimestamp = parsedTime.Format(time.RFC3339)
+			log.Debugf("Parsed timestamp %s -> %s", timestampPart, originalTimestamp)
 		}
 	}
 	if originalTimestamp == "" {
