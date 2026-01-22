@@ -125,9 +125,9 @@ func (api *API) HealthCheck() usecase.Interactor {
 		tenantCount := 0
 		databaseHealthy := false
 
-		if api.Services.Config.TenantDatabase != nil {
-			tenantCount = api.Services.Config.TenantDatabase.GetTenantCount()
-			databaseHealthy = api.Services.Config.TenantDatabase.IsHealthy()
+		if api.Config.TenantDatabase != nil {
+			tenantCount = api.Config.TenantDatabase.GetTenantCount()
+			databaseHealthy = api.Config.TenantDatabase.IsHealthy()
 		}
 
 		if !databaseHealthy {
@@ -156,8 +156,8 @@ func (api *API) GetTenants() usecase.Interactor {
 	u := usecase.NewInteractor(func(ctx context.Context, input struct{}, output *TenantsResponse) error {
 		// Get all tenants from database
 		tenants := []domain.Tenant{}
-		if api.Services.Config.TenantDatabase != nil {
-			tenants = api.Services.Config.TenantDatabase.GetAllTenants()
+		if api.Config.TenantDatabase != nil {
+			tenants = api.Config.TenantDatabase.GetAllTenants()
 		}
 
 		output.Tenants = tenants
@@ -180,8 +180,8 @@ func (api *API) GetTenant() usecase.Interactor {
 	u := usecase.NewInteractor(func(ctx context.Context, input GetTenantRequest, output *TenantResponse) error {
 		// Get specific tenant from database
 		var tenant *domain.Tenant
-		if api.Services.Config.TenantDatabase != nil {
-			tenant = api.Services.Config.TenantDatabase.GetTenantByID(input.TenantID)
+		if api.Config.TenantDatabase != nil {
+			tenant = api.Config.TenantDatabase.GetTenantByID(input.TenantID)
 		}
 
 		if tenant == nil {
@@ -207,8 +207,8 @@ func (api *API) GetTenantCount() usecase.Interactor {
 	u := usecase.NewInteractor(func(ctx context.Context, input struct{}, output *TenantCountResponse) error {
 		// Get tenant count from database
 		count := 0
-		if api.Services.Config.TenantDatabase != nil {
-			count = api.Services.Config.TenantDatabase.GetTenantCount()
+		if api.Config.TenantDatabase != nil {
+			count = api.Config.TenantDatabase.GetTenantCount()
 		}
 
 		output.Count = count

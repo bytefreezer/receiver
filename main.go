@@ -151,13 +151,10 @@ func Run() error {
 		log.Info("Health reporting is disabled")
 	}
 
-	// Business Logic
-	servicesInstance := services.NewServices(&conf)
+	// Start server
+	server := NewServer(&conf)
 
-	//start stab server
-	server := NewServer(servicesInstance, &conf)
-
-	server.HttpApi = api.NewAPI(servicesInstance, &conf)
+	server.HttpApi = api.NewAPI(&conf)
 
 	// Initialize upload worker pool with config values
 
@@ -184,19 +181,9 @@ func Run() error {
 	log.Info("Using three-stage spooling pipeline for webhook data processing")
 
 	// Initialize metrics if OTEL is enabled
-	var webhookMetrics *metrics.WebhookMetrics
 	var receiverMetrics *metrics.ReceiverMetrics
 	if conf.Otel.Enabled {
 		var err error
-		// Initialize legacy webhook metrics (keeping for compatibility)
-		webhookMetrics, err = metrics.NewWebhookMetrics()
-		if err != nil {
-			log.Warnf("Failed to initialize webhook metrics: %v", err)
-		} else {
-			log.Info("Webhook metrics initialized successfully")
-		}
-
-		// Initialize new cleaned up receiver metrics
 		receiverMetrics, err = metrics.NewReceiverMetrics()
 		if err != nil {
 			log.Warnf("Failed to initialize receiver metrics: %v", err)
@@ -207,8 +194,7 @@ func Run() error {
 
 	// Store references in config
 	conf.UploadWorkerPool = uploadPool
-	conf.WebhookMetrics = webhookMetrics   // Legacy metrics
-	conf.ReceiverMetrics = receiverMetrics // New cleaned up metrics
+	conf.ReceiverMetrics = receiverMetrics
 
 	// Start spooling service (three-stage pipeline)
 	_ = spoolingService.Start() // #nosec G104 - service start handled by defer Stop
@@ -306,17 +292,14 @@ type Server struct {
 	Name          string
 	quitterC      chan time.Duration // also internal-only
 	HttpApi       *api.API
-	Services      *services.Services
 	WebhookServer *webhook.WebhookServer
-	//here you can add other services
 }
 
-func NewServer(services *services.Services, conf *config.Config) *Server {
+func NewServer(conf *config.Config) *Server {
 	return &Server{
 		Config:   conf,
 		Name:     conf.App.Name,
 		quitterC: make(chan time.Duration),
-		Services: services,
 	}
 }
 

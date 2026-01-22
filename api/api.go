@@ -12,7 +12,6 @@ import (
 
 	"github.com/bytefreezer/goodies/log"
 	"github.com/bytefreezer/receiver/config"
-	"github.com/bytefreezer/receiver/services"
 	"github.com/swaggest/openapi-go/openapi3"
 	"github.com/swaggest/rest/web"
 	swgui "github.com/swaggest/swgui/v5emb"
@@ -20,24 +19,15 @@ import (
 )
 
 type API struct {
-	Services   *services.Services
 	ApiMetrics map[string]metric.Int64Counter
 	HttpServer *http.Server
 	sync.RWMutex
 	Config *config.Config
 }
 
-// new api
-func NewAPI(services *services.Services, conf *config.Config) *API {
-
-	//here we set map of metrics
-	//for now counter only
-	//each function can have its own metric
-	//each metric can have its own label and is created and kept as a global map of counters
-	//this is not the best way to do it but it is the simplest way to do it
-
+// NewAPI creates a new API instance
+func NewAPI(conf *config.Config) *API {
 	return &API{
-		Services:   services,
 		ApiMetrics: make(map[string]metric.Int64Counter),
 		Config:     conf,
 	}

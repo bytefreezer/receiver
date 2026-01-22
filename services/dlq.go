@@ -110,11 +110,7 @@ func (d *DLQService) Start() {
 
 	log.Info("Starting DLQ service...")
 
-	// Start retry worker
-	d.wg.Add(1)
-	go d.retryWorker()
-
-	// Start cleanup worker
+	// Start cleanup worker (retry processing is handled by SpoolingService)
 	d.wg.Add(1)
 	go d.cleanupWorker()
 
@@ -131,31 +127,6 @@ func (d *DLQService) Stop() {
 	d.cancel()
 	d.wg.Wait()
 	log.Info("DLQ service stopped")
-}
-
-// retryWorker periodically retries failed uploads
-func (d *DLQService) retryWorker() {
-	defer d.wg.Done()
-
-	retryInterval := time.Duration(d.config.DLQ.RetryIntervalSeconds) * time.Second
-	if retryInterval <= 0 {
-		retryInterval = 60 * time.Second // Default 1 minute
-	}
-
-	ticker := time.NewTicker(retryInterval)
-	defer ticker.Stop()
-
-	log.Infof("DLQ retry worker started (interval: %v)", retryInterval)
-
-	for {
-		select {
-		case <-d.ctx.Done():
-			log.Debug("DLQ retry worker stopping")
-			return
-		case <-ticker.C:
-			d.processRetries()
-		}
-	}
 }
 
 // cleanupWorker periodically cleans up old DLQ files
@@ -181,12 +152,6 @@ func (d *DLQService) cleanupWorker() {
 			d.processCleanup()
 		}
 	}
-}
-
-// processRetries is a placeholder for future retry logic
-// Currently, DLQ processing is handled by upload worker scanning retry directories
-func (d *DLQService) processRetries() {
-	log.Debug("DLQ retry check complete - retry processing handled by upload workers")
 }
 
 // processCleanup removes old files based on age and size limits
