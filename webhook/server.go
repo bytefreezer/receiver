@@ -6,6 +6,7 @@ package webhook
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 type WebhookServer struct {
 	config             *config.Config
 	httpServer         *http.Server
+	listener           net.Listener
 	securityMiddleware *SecurityMiddleware
 }
 
@@ -57,11 +59,19 @@ func (ws *WebhookServer) Start() {
 		With(ws.securityMiddleware.DatasetValidationMiddleware).
 		Post("/{tenantId}/{datasetId}", ws.receiveDataHandler)
 
-	address := fmt.Sprintf(":%d", ws.config.Protocols.Webhook.Port)
-	log.Infof("webhook server starting on %s", address)
+	address := fmt.Sprintf("0.0.0.0:%d", ws.config.Protocols.Webhook.Port)
+	log.Infof("webhook server starting on %s (tcp4)", address)
+
+	// Explicitly use tcp4 to ensure IPv4 binding
+	var err error
+	ws.listener, err = net.Listen("tcp4", address)
+	if err != nil {
+		log.Errorf("failed to create tcp4 listener: %v", err)
+		return
+	}
+	log.Infof("webhook listener created successfully on %s", ws.listener.Addr().String())
 
 	ws.httpServer = &http.Server{
-		Addr:           address,
 		Handler:        r,
 		ReadTimeout:    30 * time.Second,
 		WriteTimeout:   30 * time.Second,
@@ -69,9 +79,11 @@ func (ws *WebhookServer) Start() {
 		MaxHeaderBytes: 10 << 20, // 10MB
 	}
 
-	if err := ws.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	log.Infof("starting http server on webhook listener")
+	if err := ws.httpServer.Serve(ws.listener); err != nil && err != http.ErrServerClosed {
 		log.Errorf("webhook server failed: %v", err)
 	}
+	log.Info("webhook Serve() returned")
 }
 
 // Stop stops the webhook server

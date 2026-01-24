@@ -268,7 +268,7 @@ func Run() error {
 	go server.Start(housekeepingFn, nil)
 
 	//start api server
-	server.HttpApi.Serve(":"+strconv.Itoa(conf.Server.ApiPort), server.HttpApi.NewRouter())
+	server.HttpApi.Serve("0.0.0.0:"+strconv.Itoa(conf.Server.ApiPort), server.HttpApi.NewRouter())
 
 	return nil
 }

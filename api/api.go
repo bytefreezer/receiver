@@ -6,6 +6,7 @@ package api
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -80,17 +81,23 @@ func (api *API) NewRouter() *web.Service {
 
 // Serve serves http endpoints
 func (api *API) Serve(address string, router http.Handler) {
-	log.Infof("api server started: on %s", address)
+	log.Infof("api server starting on %s (tcp4)", address)
+
+	// Explicitly use tcp4 to ensure IPv4 binding
+	listener, err := net.Listen("tcp4", address)
+	if err != nil {
+		log.Errorf("failed to create tcp4 listener for API: %v", err)
+		return
+	}
 
 	api.HttpServer = &http.Server{
-		Addr:           address,
 		Handler:        router,
 		ReadTimeout:    30 * time.Second,
 		WriteTimeout:   30 * time.Second,
 		IdleTimeout:    120 * time.Second,
 		MaxHeaderBytes: 1 << 20, // 1MB
 	}
-	err := api.HttpServer.ListenAndServe()
+	err = api.HttpServer.Serve(listener)
 	if errors.Is(err, http.ErrServerClosed) {
 		log.Info("api server closed")
 	} else {

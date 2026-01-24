@@ -302,19 +302,21 @@ func (cfg *Config) InitializeComponents() error {
 		}
 		cfg.S3DestinationClient = s3Client
 
-		// Test S3 connection
+		// Test S3 connection - log warning if unavailable but allow service to start
+		// The spool-based architecture handles upload failures with retries
 		if err := cfg.S3DestinationClient.TestConnection(); err != nil {
-			// Send critical alert for S3 connection failure
-			if alertErr := cfg.SOCAlertClient.SendCriticalAlert(
+			log.Warnf("S3 destination connection test failed - service will start but uploads may fail: %v", err)
+			// Send medium alert for S3 connection failure
+			if alertErr := cfg.SOCAlertClient.SendMediumAlert(
 				"S3 Destination Connection Failed",
-				"Failed to connect to S3 destination - service cannot start",
+				"Failed to connect to S3 destination at startup - uploads may fail until S3 is available",
 				fmt.Sprintf("Error: %v", err),
 			); alertErr != nil {
 				log.Warnf("Failed to send SOC alert: %v", alertErr)
 			}
-			return fmt.Errorf("failed to test S3 destination connection: %w", err)
+		} else {
+			log.Info("S3 destination client initialized and tested successfully")
 		}
-		log.Info("S3 destination client initialized and tested successfully")
 	}
 
 	// Initialize tenant client and database
