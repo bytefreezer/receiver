@@ -121,7 +121,7 @@ func Run() error {
 			log.Warnf("Failed to get hostname, using 'localhost': %v", err)
 			hostname = "localhost"
 		}
-		if nodeName := os.Getenv("NODE_NAME"); nodeName != "" {
+		if nodeName := os.Getenv("NODE_NAME"); nodeName != "" && nodeName != hostname {
 			// In K8s: hostname is the pod name, NODE_NAME is the actual node
 			hostname = fmt.Sprintf("%s.%s", nodeName, hostname)
 			log.Infof("Running in Kubernetes on node %s, instance ID: %s", nodeName, hostname)
@@ -518,7 +518,7 @@ func cleanupStaleOperations(cfg *config.Config) {
 		}
 	}
 	// If running in Kubernetes with NODE_NAME env var, use node.pod format
-	if nodeName := os.Getenv("NODE_NAME"); nodeName != "" {
+	if nodeName := os.Getenv("NODE_NAME"); nodeName != "" && nodeName != instanceID {
 		instanceID = fmt.Sprintf("%s.%s", nodeName, instanceID)
 	}
 
