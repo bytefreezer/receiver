@@ -93,9 +93,8 @@ type Housekeeping struct {
 }
 
 type App struct {
-	Name      string `mapstructure:"name"`
-	Version   string `mapstructure:"version"`
-	GitCommit string `mapstructure:"-"`
+	Name    string `mapstructure:"name"`
+	Version string `mapstructure:"version"`
 }
 
 // LoggingConfig stores global logging configurations
