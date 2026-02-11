@@ -34,7 +34,6 @@ logrotate:
 config:
   app:
     name: "bytefreezer-receiver"
-    version: "1.0.0"
   
   logging:
     level: "info"
