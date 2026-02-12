@@ -130,8 +130,8 @@ func Run() error {
 			log.Infof("Running in Kubernetes on node %s, instance ID: %s", nodeName, hostname)
 		}
 
-		// Determine instance API URL without protocol (receiver webhook endpoint)
-		instanceAPI := fmt.Sprintf("%s:%d", hostname, conf.Protocols.Webhook.Port)
+		// Determine instance API URL without protocol (receiver API/health endpoint)
+		instanceAPI := fmt.Sprintf("%s:%d", hostname, conf.Server.ApiPort)
 
 		// Build configuration data with masked sensitive fields
 		configuration := buildHealthConfiguration(&conf, instanceAPI)
