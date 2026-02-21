@@ -7,8 +7,12 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/bytedance/sonic"
+	"github.com/bytefreezer/goodies/log"
 )
 
 // CompressData compresses data using gzip
@@ -57,6 +61,44 @@ func ValidateFilePath(filePath, allowedBasePath string) error {
 	}
 
 	return nil
+}
+
+// ProxyMetadata holds parsed metadata from proxy .meta files
+type ProxyMetadata struct {
+	LineCount     int64
+	OriginalBytes int64
+}
+
+// LoadProxyMetadata reads and parses a proxy .meta file, returning line count and original bytes.
+// Returns zero values if the metadata file is missing or unreadable.
+func LoadProxyMetadata(metadataPath, allowedBasePath string) ProxyMetadata {
+	result := ProxyMetadata{}
+
+	if err := ValidateFilePath(metadataPath, allowedBasePath); err != nil {
+		log.Warnf("Invalid metadata file path: %v", err)
+		return result
+	}
+
+	metadataData, err := os.ReadFile(filepath.Clean(metadataPath))
+	if err != nil {
+		log.Debugf("No metadata file found at %s", metadataPath)
+		return result
+	}
+
+	var proxyMetadata map[string]interface{}
+	if err := sonic.Unmarshal(metadataData, &proxyMetadata); err != nil {
+		log.Warnf("Failed to parse metadata file %s: %v", metadataPath, err)
+		return result
+	}
+
+	if lc, ok := proxyMetadata["line_count"].(float64); ok {
+		result.LineCount = int64(lc)
+	}
+	if ob, ok := proxyMetadata["original_bytes"].(float64); ok {
+		result.OriginalBytes = int64(ob)
+	}
+
+	return result
 }
 
 // ExtractFileExtension parses file extension from proxy filename format

@@ -231,7 +231,7 @@ func (s *SpoolingService) processQueueFiles() {
 		return
 	}
 
-	log.Debugf("QUEUE DEBUG: Found %d tenants: %v", len(tenants), tenants)
+	log.Debugf("Queue:Found %d tenants: %v", len(tenants), tenants)
 	totalProcessed := 0
 	for _, tenantID := range tenants {
 		datasets, err := s.getDatasets(tenantID)
@@ -240,7 +240,7 @@ func (s *SpoolingService) processQueueFiles() {
 			continue
 		}
 
-		log.Debugf("QUEUE DEBUG: Tenant %s has %d datasets: %v", tenantID, len(datasets), datasets)
+		log.Debugf("Queue:Tenant %s has %d datasets: %v", tenantID, len(datasets), datasets)
 		for _, datasetID := range datasets {
 			processed := s.processQueueForDataset(tenantID, datasetID)
 			totalProcessed += processed
@@ -250,7 +250,7 @@ func (s *SpoolingService) processQueueFiles() {
 	if totalProcessed > 0 {
 		log.Infof("Queue processor: moved %d files from queue to retry", totalProcessed)
 	} else {
-		log.Debugf("QUEUE DEBUG: No files processed this cycle")
+		log.Debugf("Queue:No files processed this cycle")
 	}
 }
 
@@ -277,15 +277,15 @@ func (s *SpoolingService) processQueueForDataset(tenantID, datasetID string) int
 		return 0
 	}
 
-	log.Debugf("QUEUE DEBUG: Processing %s/%s queue with %d entries", tenantID, datasetID, len(entries))
+	log.Debugf("Queue:Processing %s/%s queue with %d entries", tenantID, datasetID, len(entries))
 
 	processed := 0
 	for _, entry := range entries {
 		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".gz") {
-			log.Debugf("QUEUE DEBUG: Skipping non-gz file: %s", entry.Name())
+			log.Debugf("Queue:Skipping non-gz file: %s", entry.Name())
 			continue
 		}
-		log.Debugf("QUEUE DEBUG: Processing gz file: %s", entry.Name())
+		log.Debugf("Queue:Processing gz file: %s", entry.Name())
 
 		if s.moveQueueFileToRetry(tenantID, datasetID, entry.Name()) {
 			processed++
@@ -318,29 +318,10 @@ func (s *SpoolingService) moveQueueFileToRetry(tenantID, datasetID, filename str
 
 	// Read proxy metadata if available, otherwise estimate line count
 	compressedSize := fileInfo.Size()
-	var actualLineCount int64
-	metadataPath := queueFilePath + ".meta"
-	// Validate metadata path to prevent directory traversal attacks
-	if err := utils.ValidateFilePath(metadataPath, s.config.Bytefreezer.SpoolPath); err != nil {
-		log.Warnf("Invalid metadata file path: %v", err)
+	meta := utils.LoadProxyMetadata(queueFilePath+".meta", s.config.Bytefreezer.SpoolPath)
+	actualLineCount := meta.LineCount
+	if actualLineCount == 0 {
 		actualLineCount = compressedSize / 100 // Fallback estimate
-	} else if metadataData, err := os.ReadFile(filepath.Clean(metadataPath)); err == nil {
-		var proxyMetadata map[string]interface{}
-		if err := sonic.Unmarshal(metadataData, &proxyMetadata); err == nil {
-			if lc, ok := proxyMetadata["line_count"].(float64); ok {
-				actualLineCount = int64(lc)
-				log.Infof("RETRY FIX: Using proxy line count from metadata: %d", actualLineCount)
-			} else {
-				actualLineCount = compressedSize / 100 // Fallback estimate
-				log.Warnf("No line_count in metadata, using estimate: %d", actualLineCount)
-			}
-		} else {
-			actualLineCount = compressedSize / 100 // Fallback estimate
-			log.Warnf("Failed to parse metadata, using estimate: %d", actualLineCount)
-		}
-	} else {
-		actualLineCount = compressedSize / 100 // Fallback estimate
-		log.Warnf("No metadata file found, using estimate: %d", actualLineCount)
 	}
 
 	// Create retry metadata
@@ -534,7 +515,7 @@ func (s *SpoolingService) collectRetryJobs(tenantID string) []RetryJob {
 				continue
 			}
 
-			log.Debugf("RETRY DEBUG: Found retry job - Tenant: %s, Dataset: %s, BatchID: %s, DataFile: %s, MetaFile: %s",
+			log.Debugf("Retry:Found retry job - Tenant: %s, Dataset: %s, BatchID: %s, DataFile: %s, MetaFile: %s",
 				tenantID, datasetID, batchID, dataFilePath, metaFilePath)
 
 			jobs = append(jobs, RetryJob{
@@ -611,7 +592,7 @@ func (s *SpoolingService) processRetryJob(job RetryJob) bool {
 	}
 
 	// Try to upload the file
-	log.Debugf("RETRY DEBUG: Attempting S3 upload for batch %s - File: %s, Filename in metadata: %s",
+	log.Debugf("Retry:Attempting S3 upload for batch %s - File: %s, Filename in metadata: %s",
 		job.BatchID, job.FilePath, retryFile.Filename)
 	success := s.attemptS3Upload(job.TenantID, job.DatasetID, job.FilePath, &retryFile)
 
@@ -662,7 +643,7 @@ func (s *SpoolingService) attemptS3Upload(tenantID, datasetID, filePath string, 
 	// For proxy files: tenant--dataset--timestamp.[datatype].gz
 	// For direct uploads: timestamp-uuid.ndjson.gz
 	s3Key := fmt.Sprintf("%s/%s/%s", tenantID, datasetID, retryFile.Filename)
-	log.Debugf("S3 DEBUG: Uploading to S3 key: %s (file size: %d bytes)", s3Key, len(data))
+	log.Debugf("S3 upload:Uploading to S3 key: %s (file size: %d bytes)", s3Key, len(data))
 
 	// Parse proxy filename format for enhanced metadata using new format
 	var dataType, originalTimestamp string

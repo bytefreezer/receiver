@@ -408,28 +408,11 @@ func (up *UploadWorkerPool) processQueueFile(dataPath string) error {
 	}
 
 	// Read proxy metadata if available
-	var lineCount int64 = 0
-	var originalBytes int64 = int64(len(fileData))
-	metadataPath := dataPath + ".meta"
-	// Validate metadata path to prevent directory traversal attacks
-	if err := utils.ValidateFilePath(metadataPath, spoolPath); err != nil {
-		log.Warnf("Invalid metadata file path: %v", err)
-	} else if metadataData, err := os.ReadFile(filepath.Clean(metadataPath)); err == nil {
-		var proxyMetadata map[string]interface{}
-		if err := sonic.Unmarshal(metadataData, &proxyMetadata); err == nil {
-			if lc, ok := proxyMetadata["line_count"].(float64); ok {
-				lineCount = int64(lc)
-				log.Infof("METADATA FIX: Using proxy line count from metadata: %d", lineCount)
-			}
-			if ob, ok := proxyMetadata["original_bytes"].(float64); ok {
-				originalBytes = int64(ob)
-				log.Debugf("Using proxy original bytes from metadata: %d", originalBytes)
-			}
-		} else {
-			log.Warnf("Failed to parse metadata file %s: %v", metadataPath, err)
-		}
-	} else {
-		log.Warnf("No metadata file found at %s, using estimated line count", metadataPath)
+	meta := utils.LoadProxyMetadata(dataPath+".meta", spoolPath)
+	lineCount := meta.LineCount
+	originalBytes := meta.OriginalBytes
+	if originalBytes == 0 {
+		originalBytes = int64(len(fileData))
 	}
 
 	// Generate S3 key preserving original filename format

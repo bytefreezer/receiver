@@ -233,8 +233,7 @@ func (ws *WebhookServer) receiveDataHandler(w http.ResponseWriter, r *http.Reque
 	// ONLY accept filename from proxy - no fallbacks or generation
 	proxyFilename := r.Header.Get("X-Proxy-Filename")
 
-	// Debug: Log exact filename received
-	log.Infof("FILENAME DEBUG: tenant=%s, dataset=%s, X-Proxy-Filename='%s'",
+	log.Debugf("Webhook filename: tenant=%s, dataset=%s, X-Proxy-Filename='%s'",
 		tenantID, datasetID, proxyFilename)
 
 	if proxyFilename == "" {

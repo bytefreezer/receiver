@@ -122,7 +122,7 @@ func (sm *SecurityMiddleware) DatasetValidationMiddleware(next http.Handler) htt
 		tenantID = strings.TrimSuffix(tenantID, ".")
 		datasetID = strings.TrimSuffix(datasetID, ".")
 
-		log.Debugf("MIDDLEWARE DEBUG: extracted tenantID='%s', datasetID='%s'", tenantID, datasetID)
+		log.Debugf("Extracted tenantID='%s', datasetID='%s'", tenantID, datasetID)
 
 		if tenantID == "" || datasetID == "" {
 			http.Error(w, "Tenant ID and Dataset ID required", http.StatusBadRequest)
