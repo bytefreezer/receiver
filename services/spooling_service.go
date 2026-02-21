@@ -109,7 +109,6 @@ type RetryFile struct {
 	RetryCount    int       `json:"retry_count"`
 	LastRetry     time.Time `json:"last_retry"`
 	FailureReason string    `json:"failure_reason,omitempty"`
-	FilenameDebug string    `json:"filename_debug,omitempty"` // Debug info about filename transformations
 }
 
 // RetryJob represents a retry task for a worker (proxy pattern)
@@ -344,12 +343,6 @@ func (s *SpoolingService) moveQueueFileToRetry(tenantID, datasetID, filename str
 		log.Warnf("No metadata file found, using estimate: %d", actualLineCount)
 	}
 
-	// Create debug info for filename transformations
-	var filenameDebug string
-	if strings.Contains(filename, "..") {
-		filenameDebug = fmt.Sprintf("original_filename_had_double_dots: %s -> %s", filename, filename+".meta")
-	}
-
 	// Create retry metadata
 	retryFile := RetryFile{
 		QueueFile: QueueFile{
@@ -366,7 +359,6 @@ func (s *SpoolingService) moveQueueFileToRetry(tenantID, datasetID, filename str
 		RetryCount:    0,
 		LastRetry:     time.Time{},
 		FailureReason: "",
-		FilenameDebug: filenameDebug,
 	}
 
 	// Move file to retry directory
