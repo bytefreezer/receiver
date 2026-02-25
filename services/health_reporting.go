@@ -27,7 +27,7 @@ type HealthReportingService struct {
 	enabled        bool
 	stopChan       chan bool
 	config         map[string]interface{} // Full configuration data to report
-	uninstallChan  chan struct{}           // Signals that control plane requested uninstall
+	uninstallChan  chan struct{}          // Signals that control plane requested uninstall
 }
 
 // ServiceRegistrationRequest represents a service registration request
