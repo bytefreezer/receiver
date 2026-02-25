@@ -25,15 +25,17 @@ go.work
 # sqllite db file or local testing.
 gorm.db
 
-#ignore build files
-#bytefreezer-receiver
-#bytefreezer-receiver-*
+# Build binaries
+bytefreezer-receiver
+bytefreezer-receiver-*
+bytefreezer-piper
 
 # Ansible build artifacts
 ansible/dist/
+ansible/playbooks/dist/
 
 #ignore DS_STORE
 *.DS_Store
 
-distribution/docker/bytefreezer-cacheCLAUDE.md
-#ansible/playbooks/dist/
+distribution/docker/bytefreezer-cache
+CLAUDE.md
