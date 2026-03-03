@@ -13,7 +13,6 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -38,39 +37,10 @@ var (
 	envPrefix = "BYTEFREEZER_RECEIVER_"
 )
 
-// getDockerContainerID returns the short container ID if running inside Docker, empty string otherwise.
-func getDockerContainerID() string {
-	if _, err := os.Stat("/.dockerenv"); err != nil {
-		return ""
-	}
-	data, err := os.ReadFile("/proc/self/cgroup")
-	if err != nil {
-		return ""
-	}
-	for _, line := range strings.Split(string(data), "\n") {
-		if idx := strings.LastIndex(line, "/docker/"); idx != -1 {
-			id := line[idx+len("/docker/"):]
-			if len(id) >= 12 {
-				return id[:12]
-			}
-		}
-		if idx := strings.LastIndex(line, "/docker-"); idx != -1 {
-			id := strings.TrimSuffix(line[idx+len("/docker-"):], ".scope")
-			if len(id) >= 12 {
-				return id[:12]
-			}
-		}
-	}
-	data, err = os.ReadFile("/proc/1/cpuset")
-	if err != nil {
-		return ""
-	}
-	cpuset := strings.TrimSpace(string(data))
-	id := filepath.Base(cpuset)
-	if len(id) >= 12 && id != "/" {
-		return id[:12]
-	}
-	return ""
+// isDockerContainer returns true if running inside a Docker container.
+func isDockerContainer() bool {
+	_, err := os.Stat("/.dockerenv")
+	return err == nil
 }
 
 // Execute executes the root command.
@@ -155,17 +125,13 @@ func Run() error {
 		}
 
 		// Build instance ID: host:containerID for Docker, node.pod for K8s, hostname for bare metal
-		containerID := getDockerContainerID()
 		hostname, _ := os.Hostname()
 		if hostname == "" {
 			hostname = "localhost"
 		}
-		if containerID != "" {
-			// Docker: use HOST_HOSTNAME env var if set, otherwise fall back to container ID
+		if isDockerContainer() {
 			if hostHostname := os.Getenv("HOST_HOSTNAME"); hostHostname != "" {
-				hostname = fmt.Sprintf("%s:%s", hostHostname, containerID)
-			} else {
-				hostname = containerID
+				hostname = fmt.Sprintf("%s:%s", hostHostname, hostname)
 			}
 			log.Infof("Running in Docker container, instance ID: %s", hostname)
 		}
@@ -578,9 +544,6 @@ func cleanupStaleOperations(cfg *config.Config) {
 	}
 
 	instanceID := cfg.InstanceID
-	if instanceID == "" {
-		instanceID = getDockerContainerID()
-	}
 	if instanceID == "" {
 		instanceID, _ = os.Hostname()
 		if instanceID == "" {
