@@ -89,7 +89,7 @@ type Bytefreezer struct {
 
 type Housekeeping struct {
 	Enabled         bool `mapstructure:"enabled"`
-	IntervalSeconds int  `mapstructure:"intervalseconds"`
+	IntervalSeconds int  `mapstructure:"interval_seconds"`
 }
 
 type App struct {
@@ -214,7 +214,43 @@ func LoadConfig(cfgFile, envPrefix string, cfg *Config) error {
 	cfg.InstanceID = generateInstanceID()
 	log.Infof("Generated instance ID: %s", cfg.InstanceID)
 
+	// Validate configuration
+	validateConfig(cfg)
+
 	return nil
+}
+
+// validateConfig checks for common misconfigurations and logs effective config summary
+func validateConfig(cfg *Config) {
+	// Warn on misconfigured health reporting
+	if cfg.HealthReporting.Enabled && cfg.HealthReporting.ReportInterval <= 0 {
+		log.Warnf("CONFIG WARNING: health_reporting.enabled=true but report_interval=%d — health reports will use default interval", cfg.HealthReporting.ReportInterval)
+	}
+
+	// Warn on missing API port
+	if cfg.Server.ApiPort <= 0 {
+		log.Warnf("CONFIG WARNING: server.api_port=%d — API server will bind to random port, health checks will fail", cfg.Server.ApiPort)
+	}
+
+	// Warn on control_service misconfiguration
+	if cfg.ControlService.Enabled && cfg.ControlService.ControlURL == "" {
+		log.Warnf("CONFIG WARNING: control_service.enabled=true but control_url is empty — tenant validation will fail, all webhook POSTs will return HTTP 410")
+	}
+
+	// Warn on zero DLQ retry attempts
+	if cfg.DLQ.Enabled && cfg.DLQ.RetryAttempts <= 0 {
+		log.Warnf("CONFIG WARNING: dlq.enabled=true but retry_attempts=%d — files will go straight to DLQ on first S3 error", cfg.DLQ.RetryAttempts)
+	}
+
+	// Log effective config summary
+	log.Infof("=== EFFECTIVE CONFIG ===")
+	log.Infof("  server.api_port: %d", cfg.Server.ApiPort)
+	log.Infof("  protocols.webhook.port: %d", cfg.Protocols.Webhook.Port)
+	log.Infof("  control_service.enabled: %v, url: %s", cfg.ControlService.Enabled, cfg.ControlService.ControlURL)
+	log.Infof("  health_reporting.enabled: %v, report_interval: %ds", cfg.HealthReporting.Enabled, cfg.HealthReporting.ReportInterval)
+	log.Infof("  housekeeping.enabled: %v, interval_seconds: %d", cfg.Housekeeping.Enabled, cfg.Housekeeping.IntervalSeconds)
+	log.Infof("  dlq.enabled: %v, retry_attempts: %d", cfg.DLQ.Enabled, cfg.DLQ.RetryAttempts)
+	log.Infof("  s3destination.bucket: %s, endpoint: %s", cfg.S3Destination.BucketName, cfg.S3Destination.Endpoint)
 }
 
 // InitializeComponents initializes all components (tenant, SOC, spool directory)
