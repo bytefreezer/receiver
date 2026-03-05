@@ -1,8 +1,8 @@
-# ByteFreezer Receiver Configuration — Docker-ready defaults
+# ByteFreezer Receiver Configuration — AWX/Ansible deployment
 #
-# This config ships inside the Docker image. Secrets (S3 credentials,
-# control API key) are empty and MUST be supplied via environment variables
-# or a volume-mounted config file override.
+# This file contains AWX placeholder values for systemd/Ansible deployments.
+# Ansible replaces REPLACE_WITH_AWX_VARIABLE_* at deploy time.
+# For Docker deployments, use config.yaml instead.
 
 app:
   name: "bytefreezer-receiver"
@@ -15,34 +15,31 @@ logging:
 server:
   api_port: 8081
 
-# Raw data ingestion
 protocols:
   webhook:
     enabled: true
     port: 8080
-    max_payload_size: 10485760  # 10MB
+    max_payload_size: 10485760
   upload:
     enabled: false
-    max_file_size: 104857600  # 100MB
+    max_file_size: 104857600
 
 bytefreezer:
   upload_worker_count: 10
   spool_path: "/var/spool/bytefreezer-receiver"
 
-# Control Service configuration
 control_service:
   enabled: true
-  control_url: ""
-  api_key: ""
-  account_id: ""
+  control_url: "REPLACE_WITH_AWX_VARIABLE_bytefreezer_control_url"
+  api_key: "REPLACE_WITH_AWX_VARIABLE_bytefreezer_api_key"
+  account_id: "REPLACE_WITH_AWX_VARIABLE_bytefreezer_account_id"
   timeout_seconds: 30
 
 authentication:
   enabled: false
 
-# OpenTelemetry configuration
 otel:
-  enabled: false
+  enabled: true
   service_name: "bytefreezer-receiver"
   scrapeIntervalseconds: 15
   prometheus_mode: true
@@ -51,22 +48,20 @@ otel:
 
 housekeeping:
   enabled: true
-  interval_seconds: 300
+  interval_seconds: 600
 
-# S3 destination for raw webhook data
 s3destination:
   bucket_name: "bytefreezer-intake"
   region: "us-east-1"
-  endpoint: "minio:9000"
+  endpoint: "REPLACE_WITH_AWX_VARIABLE_bytefreezer_s3_endpoint"
   ssl: false
-  access_key: ""
-  secret_key: ""
+  access_key: "REPLACE_WITH_AWX_VARIABLE_bytefreezer_s3_access_key"
+  secret_key: "REPLACE_WITH_AWX_VARIABLE_bytefreezer_s3_secret_key"
   use_iam_role: false
 
 soc:
   enabled: false
 
-# Dead Letter Queue
 dlq:
   enabled: true
   directory: "/var/spool/bytefreezer-receiver"
@@ -77,13 +72,11 @@ dlq:
 
 dev: false
 
-# Health reporting to control plane
 health_reporting:
   enabled: true
   report_interval: 30
   timeout_seconds: 10
   register_on_startup: true
 
-# Error tracking
 error_tracking:
   enabled: true

@@ -46,7 +46,7 @@ otel:
 # Housekeeping configuration
 housekeeping:
   enabled: {{ config.housekeeping.enabled | lower }}
-  intervalseconds: {{ config.housekeeping.intervalseconds }}
+  interval_seconds: {{ config.housekeeping.interval_seconds }}
 
 # S3 destination configuration
 # Credentials come from AWX variables: bytefreezer_s3_endpoint, bytefreezer_s3_access_key, bytefreezer_s3_secret_key
