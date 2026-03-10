@@ -51,7 +51,7 @@ housekeeping:
   interval_seconds: 600
 
 s3destination:
-  bucket_name: "bytefreezer-intake"
+  bucket_name: "intake"
   region: "us-east-1"
   endpoint: "REPLACE_WITH_AWX_VARIABLE_bytefreezer_s3_endpoint"
   ssl: false

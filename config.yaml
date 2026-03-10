@@ -55,7 +55,7 @@ housekeeping:
 
 # S3 destination for raw webhook data
 s3destination:
-  bucket_name: "bytefreezer-intake"
+  bucket_name: "intake"
   region: "us-east-1"
   endpoint: "minio:9000"
   ssl: false
