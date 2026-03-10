@@ -103,7 +103,7 @@ config:
     cleanup_interval_seconds: 300
     max_age_days: 7
 
-  # GeoIP processing moved to bytefreezer-piper service
+  # GeoIP processing moved to piper service
 
   dev: false  # Disabled - using Control Service (see control_service above)
 
