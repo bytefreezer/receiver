@@ -6,6 +6,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/bytefreezer/goodies/log"
 	"github.com/bytefreezer/receiver/config"
@@ -317,6 +318,47 @@ func (api *API) GetConfig() usecase.Interactor {
 	u.SetTitle("Get System Configuration")
 	u.SetDescription("Retrieve the current system configuration (sensitive values are masked)")
 	u.SetTags("Configuration")
+
+	return u
+}
+
+// ReloadTenantsResponse represents the reload tenants response
+type ReloadTenantsResponse struct {
+	Message     string `json:"message"`
+	TenantCount int    `json:"tenant_count"`
+	Reloaded    bool   `json:"reloaded"`
+}
+
+// ReloadTenants triggers an immediate tenant database refresh from the control plane.
+// Rate-limited to once per 30 seconds to prevent runaway polling.
+func (api *API) ReloadTenants() usecase.Interactor {
+	u := usecase.NewInteractor(func(ctx context.Context, input struct{}, output *ReloadTenantsResponse) error {
+		if api.Config.TenantDatabase == nil {
+			return fmt.Errorf("tenant database not initialized")
+		}
+
+		count, reloaded, err := api.Config.TenantDatabase.ReloadWithRateLimit(30 * time.Second)
+		if err != nil {
+			log.Errorf("Failed to reload tenants: %v", err)
+			return fmt.Errorf("failed to reload tenants: %w", err)
+		}
+
+		output.TenantCount = count
+		output.Reloaded = reloaded
+		if reloaded {
+			output.Message = fmt.Sprintf("Tenant database reloaded: %d tenants", count)
+			log.Infof("Tenant database reloaded via API: %d tenants", count)
+		} else {
+			output.Message = fmt.Sprintf("Rate limited — last reload was less than 30s ago. Current tenants: %d", count)
+			log.Debugf("Tenant reload rate-limited, current count: %d", count)
+		}
+
+		return nil
+	})
+
+	u.SetTitle("Reload Tenants")
+	u.SetDescription("Trigger an immediate tenant database refresh from the control plane. Rate-limited to once per 30 seconds.")
+	u.SetTags("Tenants")
 
 	return u
 }

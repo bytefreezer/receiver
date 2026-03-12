@@ -159,6 +159,24 @@ func (tdb *TenantDatabase) GetLastSync() time.Time {
 	return tdb.lastSync
 }
 
+// ReloadWithRateLimit triggers a tenant reload if at least minInterval has passed since last sync.
+// Returns the new tenant count, whether a reload actually happened, and any error.
+func (tdb *TenantDatabase) ReloadWithRateLimit(minInterval time.Duration) (int, bool, error) {
+	tdb.mutex.RLock()
+	since := time.Since(tdb.lastSync)
+	tdb.mutex.RUnlock()
+
+	if since < minInterval {
+		return tdb.GetTenantCount(), false, nil
+	}
+
+	if err := tdb.UpdateDatabase(); err != nil {
+		return tdb.GetTenantCount(), false, err
+	}
+
+	return tdb.GetTenantCount(), true, nil
+}
+
 // setHealthy sets the health status (internal use only)
 func (tdb *TenantDatabase) setHealthy(healthy bool) {
 	tdb.mutex.Lock()

@@ -60,6 +60,9 @@ func (api *API) NewRouter() *web.Service {
 	service.Get("/api/v1/tenants/count", api.GetTenantCount())
 	service.Get("/api/v1/tenants/{tenantId}", api.GetTenant())
 
+	// Tenant reload endpoint
+	service.Post("/api/v1/reload-tenants", api.ReloadTenants())
+
 	// Configuration endpoints
 	service.Get("/api/v1/config", api.GetConfig())
 
