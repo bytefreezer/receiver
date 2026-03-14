@@ -130,7 +130,7 @@ func Run() error {
 			hostname = "localhost"
 		}
 		if isDockerContainer() {
-			if hostHostname := os.Getenv("HOST_HOSTNAME"); hostHostname != "" {
+			if hostHostname := os.Getenv("HOST_HOSTNAME"); hostHostname != "" && hostHostname != hostname {
 				hostname = fmt.Sprintf("%s:%s", hostHostname, hostname)
 			}
 			log.Infof("Running in Docker container, instance ID: %s", hostname)
