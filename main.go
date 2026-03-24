@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
+	controlclient "github.com/bytefreezer/goodies/control-client"
 	"github.com/bytefreezer/goodies/log"
 	"github.com/bytefreezer/receiver/api"
 	"github.com/bytefreezer/receiver/config"
@@ -191,6 +192,34 @@ func Run() error {
 		}()
 	} else {
 		log.Info("Health reporting is disabled")
+	}
+
+	// Initialize change observer for fast tenant/dataset refresh
+	if conf.ControlService.Enabled && conf.ControlService.ControlURL != "" {
+		observerClient := controlclient.NewClient(controlclient.Config{
+			BaseURL:        conf.ControlService.ControlURL,
+			APIKey:         conf.ControlService.APIKey,
+			TimeoutSeconds: 10,
+		})
+		changeObserver := controlclient.NewChangeObserver(observerClient, conf.ControlService.AccountID, 15*time.Second)
+		changeObserver.SetLogFunc(func(format string, args ...interface{}) {
+			log.Infof(format, args...)
+		})
+		changeObserver.OnChange(controlclient.ChangeCategoryTenants, func() {
+			log.Info("Change detected: tenants — triggering tenant database refresh")
+			if err := conf.UpdateTenantDatabase(); err != nil {
+				log.Errorf("Failed to update tenant database on change notification: %v", err)
+			}
+		})
+		changeObserver.OnChange(controlclient.ChangeCategoryDatasets, func() {
+			log.Info("Change detected: datasets — triggering tenant database refresh")
+			if err := conf.UpdateTenantDatabase(); err != nil {
+				log.Errorf("Failed to update tenant database on change notification: %v", err)
+			}
+		})
+		changeObserver.Start()
+		defer changeObserver.Stop()
+		log.Info("Change observer started — polling every 15s for tenant/dataset changes")
 	}
 
 	// Start server
