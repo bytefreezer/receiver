@@ -141,7 +141,9 @@ func Run() error {
 			log.Infof("Running in Kubernetes on node %s, instance ID: %s", nodeName, hostname)
 		}
 
-		// Determine instance API URL without protocol (receiver API/health endpoint)
+		// Instance ID uses the webhook port (primary service identity)
+		instanceID := fmt.Sprintf("%s:%d", hostname, conf.Protocols.Webhook.Port)
+		// Instance API uses the API port (health/management endpoint)
 		instanceAPI := fmt.Sprintf("%s:%d", hostname, conf.Server.ApiPort)
 
 		// Build configuration data with masked sensitive fields
@@ -150,8 +152,9 @@ func Run() error {
 		healthReportingService = services.NewHealthReportingService(
 			conf.ControlService.ControlURL,
 			"bytefreezer-receiver",
+			instanceID,
 			instanceAPI,
-			conf.ControlService.APIKey, // System API key for authentication
+			conf.ControlService.APIKey,
 			reportInterval,
 			timeout,
 			configuration,

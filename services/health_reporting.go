@@ -68,11 +68,11 @@ type HealthReportResponse struct {
 }
 
 // NewHealthReportingService creates a new health reporting service
-func NewHealthReportingService(controlURL, serviceType, instanceAPI, apiKey string, reportInterval, timeout time.Duration, config map[string]interface{}) *HealthReportingService {
+func NewHealthReportingService(controlURL, serviceType, instanceID, instanceAPI, apiKey string, reportInterval, timeout time.Duration, config map[string]interface{}) *HealthReportingService {
 	return &HealthReportingService{
 		controlURL:     controlURL,
 		serviceType:    serviceType,
-		instanceID:     instanceAPI,
+		instanceID:     instanceID,
 		instanceAPI:    instanceAPI,
 		reportInterval: reportInterval,
 		timeout:        timeout,
